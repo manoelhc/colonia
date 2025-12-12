@@ -1,0 +1,33 @@
+{
+  "app": {
+    "title": "Colonia",
+    "subtitle": "Open Source Alternative to Spacelift"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "stacks": "Stacks",
+    "settings": "Settings"
+  },
+  "page": {
+    "dashboard": "Dashboard"
+  },
+  "content": {
+    "welcome": "Welcome to Colonia",
+    "description": "Your open-source infrastructure automation platform. Manage your infrastructure as code with ease.",
+    "recent_activity": "Recent Activity",
+    "no_activity": "No recent activity"
+  },
+  "stats": {
+    "projects": "Projects",
+    "stacks": "Stacks",
+    "runs": "Runs",
+    "resources": "Resources"
+  },
+  "footer": {
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "version": "Version"
+  }
+}

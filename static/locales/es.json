@@ -1,0 +1,33 @@
+{
+  "app": {
+    "title": "Colonia",
+    "subtitle": "Alternativa de Código Abierto a Spacelift"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "projects": "Proyectos",
+    "stacks": "Pilas",
+    "settings": "Configuración"
+  },
+  "page": {
+    "dashboard": "Panel"
+  },
+  "content": {
+    "welcome": "Bienvenido a Colonia",
+    "description": "Tu plataforma de automatización de infraestructura de código abierto. Gestiona tu infraestructura como código con facilidad.",
+    "recent_activity": "Actividad Reciente",
+    "no_activity": "No hay actividad reciente"
+  },
+  "stats": {
+    "projects": "Proyectos",
+    "stacks": "Pilas",
+    "runs": "Ejecuciones",
+    "resources": "Recursos"
+  },
+  "footer": {
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "version": "Versión"
+  }
+}
