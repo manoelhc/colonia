@@ -40,7 +40,8 @@
             const key = element.getAttribute('data-i18n');
             const translation = getNestedTranslation(translations, key);
             if (translation) {
-                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                const tagName = element.tagName.toUpperCase();
+                if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
                     element.placeholder = translation;
                 } else {
                     element.textContent = translation;
