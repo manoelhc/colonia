@@ -4,20 +4,21 @@ from rupy import Rupy, Response, Request
 
 app = Rupy()
 
-static_dir = os.getenv("PWD")
+static_dir = "./static"
 
-@app.static("/js", f"{static_dir}/static/js")
-def static_js_files():
-    pass
+print(static_dir)
 
-@app.static("/css", f"{static_dir}/css")
-def static_css_files():
-    pass
+@app.static("/static/js", f"{static_dir}/js")
+def static_js_files(response: Response) -> Response:
+    return response
 
-@app.static("/locales", f"{static_dir}/locales")
-def static_i18n_files():
-    pass
+@app.static("/static/css", f"{static_dir}/css")
+def static_css_files(response: Response) -> Response:
+    return response
 
+@app.static("/static/locales", f"{static_dir}/locales")
+def static_i18n_files(response: Response) -> Response:
+    return response
 
 @app.template("/", template="dashboard.html.tpl")
 def index(request: Request) -> dict:

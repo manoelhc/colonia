@@ -11,9 +11,9 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "rupy-api", git = "https://github.com/manoelhc/rupy.git?rev=v0.0.1" }]
+requires-dist = [{ name = "rupy-api", git = "https://github.com/manoelhc/rupy.git?rev=v0.0.2" }]
 
 [[package]]
 name = "rupy-api"
 version = "0.1.0"
-source = { git = "https://github.com/manoelhc/rupy.git?rev=v0.0.1#62638892423b8c46ed7b2a700b18f331e780a990" }
+source = { git = "https://github.com/manoelhc/rupy.git?rev=v0.0.2#d3d1ab5b4c6762fa327d730ec362626627e24a2a" }
