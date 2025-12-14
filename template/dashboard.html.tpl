@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="app.title">Colonia Dashboard</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <title data-i18n="app.title">{{ title }} </title>
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -169,7 +169,7 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="/static/js/theme.js"></script>
-    <script src="/static/js/i18n.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/i18n.js"></script>
 </body>
 </html>
