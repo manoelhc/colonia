@@ -3,6 +3,7 @@ import mimetypes
 from rupy import Rupy, Response, Request
 
 app = Rupy()
+app.set_template_directory("./templates")
 
 static_dir = "./static"
 
