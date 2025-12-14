@@ -10,13 +10,34 @@
     "settings": "Settings"
   },
   "page": {
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "stacks": "Stacks",
+    "settings": "Settings"
   },
   "content": {
     "welcome": "Welcome to Colonia",
     "description": "Your open-source infrastructure automation platform. Manage your infrastructure as code with ease.",
     "recent_activity": "Recent Activity",
     "no_activity": "No recent activity"
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "Manage your infrastructure projects. Each project represents a collection of stacks and resources.",
+    "list": "Project List",
+    "no_projects": "No projects found. Create your first project to get started."
+  },
+  "stacks": {
+    "title": "Stacks",
+    "description": "Manage your infrastructure stacks. Stacks are the core unit of infrastructure management in Colonia.",
+    "list": "Stack List",
+    "no_stacks": "No stacks found. Create your first stack to begin managing infrastructure."
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Configure your Colonia instance and manage your preferences.",
+    "general": "General Settings",
+    "general_description": "General configuration options will appear here."
   },
   "stats": {
     "projects": "Projects",

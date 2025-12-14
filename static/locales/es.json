@@ -10,13 +10,34 @@
     "settings": "Configuración"
   },
   "page": {
-    "dashboard": "Panel"
+    "dashboard": "Panel",
+    "projects": "Proyectos",
+    "stacks": "Pilas",
+    "settings": "Configuración"
   },
   "content": {
     "welcome": "Bienvenido a Colonia",
     "description": "Tu plataforma de automatización de infraestructura de código abierto. Gestiona tu infraestructura como código con facilidad.",
     "recent_activity": "Actividad Reciente",
     "no_activity": "No hay actividad reciente"
+  },
+  "projects": {
+    "title": "Proyectos",
+    "description": "Gestiona tus proyectos de infraestructura. Cada proyecto representa una colección de pilas y recursos.",
+    "list": "Lista de Proyectos",
+    "no_projects": "No se encontraron proyectos. Crea tu primer proyecto para comenzar."
+  },
+  "stacks": {
+    "title": "Pilas",
+    "description": "Gestiona tus pilas de infraestructura. Las pilas son la unidad central de gestión de infraestructura en Colonia.",
+    "list": "Lista de Pilas",
+    "no_stacks": "No se encontraron pilas. Crea tu primera pila para comenzar a gestionar infraestructura."
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Configura tu instancia de Colonia y gestiona tus preferencias.",
+    "general": "Configuración General",
+    "general_description": "Las opciones de configuración general aparecerán aquí."
   },
   "stats": {
     "projects": "Proyectos",

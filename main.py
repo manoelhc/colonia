@@ -27,6 +27,27 @@ def index(request: Request) -> dict:
         "title": "Colonia Dashboard"
     }
 
+@app.template("/projects", template="projects.html.tpl")
+def projects(request: Request) -> dict:
+    """Render projects page with context data"""
+    return {
+        "title": "Colonia Projects"
+    }
+
+@app.template("/stacks", template="stacks.html.tpl")
+def stacks(request: Request) -> dict:
+    """Render stacks page with context data"""
+    return {
+        "title": "Colonia Stacks"
+    }
+
+@app.template("/settings", template="settings.html.tpl")
+def settings(request: Request) -> dict:
+    """Render settings page with context data"""
+    return {
+        "title": "Colonia Settings"
+    }
+
 def main():
     """Run the Colonia web server."""
     print("Starting Colonia Dashboard...")

@@ -10,13 +10,34 @@
     "settings": "Configurações"
   },
   "page": {
-    "dashboard": "Painel"
+    "dashboard": "Painel",
+    "projects": "Projetos",
+    "stacks": "Pilhas",
+    "settings": "Configurações"
   },
   "content": {
     "welcome": "Bem-vindo ao Colonia",
     "description": "Sua plataforma de automação de infraestrutura open-source. Gerencie sua infraestrutura como código com facilidade.",
     "recent_activity": "Atividade Recente",
     "no_activity": "Nenhuma atividade recente"
+  },
+  "projects": {
+    "title": "Projetos",
+    "description": "Gerencie seus projetos de infraestrutura. Cada projeto representa uma coleção de pilhas e recursos.",
+    "list": "Lista de Projetos",
+    "no_projects": "Nenhum projeto encontrado. Crie seu primeiro projeto para começar."
+  },
+  "stacks": {
+    "title": "Pilhas",
+    "description": "Gerencie suas pilhas de infraestrutura. Pilhas são a unidade central de gerenciamento de infraestrutura no Colonia.",
+    "list": "Lista de Pilhas",
+    "no_stacks": "Nenhuma pilha encontrada. Crie sua primeira pilha para começar a gerenciar infraestrutura."
+  },
+  "settings": {
+    "title": "Configurações",
+    "description": "Configure sua instância Colonia e gerencie suas preferências.",
+    "general": "Configurações Gerais",
+    "general_description": "As opções de configuração geral aparecerão aqui."
   },
   "stats": {
     "projects": "Projetos",

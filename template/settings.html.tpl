@@ -17,7 +17,7 @@
             <nav class="sidebar-nav">
                 <ul>
                     <li>
-                        <a href="/" class="active">
+                        <a href="/">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                             </svg>
@@ -41,7 +41,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/settings">
+                        <a href="/settings" class="active">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -58,7 +58,7 @@
             <!-- Top Navbar -->
             <header class="top-navbar">
                 <div class="navbar-inner">
-                    <h2 data-i18n="page.dashboard">Dashboard</h2>
+                    <h2 data-i18n="page.settings">Settings</h2>
                     <div class="navbar-actions">
                         <!-- Language Selector -->
                         <select id="languageSelector">
@@ -90,62 +90,19 @@
             <!-- Content Area -->
             <main class="content-area">
                 <div class="content-wrapper">
-                    <!-- Welcome Card -->
+                    <!-- Settings Overview Card -->
                     <div class="card">
-                        <h3 data-i18n="content.welcome">Welcome to Colonia</h3>
-                        <p data-i18n="content.description">Your open-source infrastructure automation platform. Manage your infrastructure as code with ease.</p>
+                        <h3 data-i18n="settings.title">Settings</h3>
+                        <p data-i18n="settings.description">Configure your Colonia instance and manage your preferences.</p>
                     </div>
 
-                    <!-- Stats Grid -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span data-i18n="stats.projects">Projects</span>
-                                <svg class="text-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                                </svg>
-                            </div>
-                            <p class="stat-value">0</p>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span data-i18n="stats.stacks">Stacks</span>
-                                <svg class="text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                </svg>
-                            </div>
-                            <p class="stat-value">0</p>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span data-i18n="stats.runs">Runs</span>
-                                <svg class="text-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                            </div>
-                            <p class="stat-value">0</p>
-                        </div>
-                        
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <span data-i18n="stats.resources">Resources</span>
-                                <svg class="text-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
-                                </svg>
-                            </div>
-                            <p class="stat-value">0</p>
-                        </div>
-                    </div>
-
-                    <!-- Activity Section -->
+                    <!-- Settings Sections -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4 data-i18n="content.recent_activity">Recent Activity</h4>
+                            <h4 data-i18n="settings.general">General Settings</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="content.no_activity">No recent activity</p>
+                            <p data-i18n="settings.general_description">General configuration options will appear here.</p>
                         </div>
                     </div>
                 </div>
