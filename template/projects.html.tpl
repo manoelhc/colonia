@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="app.title">{{ title }} </title>
+    <title data-i18n="app.title">{{ title }}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
