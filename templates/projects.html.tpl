@@ -15,6 +15,51 @@
             }
         })();
     </script>
+    <script>
+        // Apply cached translations immediately to prevent flash
+        (function() {
+            const lang = localStorage.getItem('language') || 
+                        (navigator.language || navigator.userLanguage).split('-')[0];
+            const cachedLang = ['en', 'pt', 'es'].includes(lang) ? lang : 'en';
+            const cachedTranslations = localStorage.getItem('translations_' + cachedLang);
+            
+            if (cachedTranslations) {
+                try {
+                    const translations = JSON.parse(cachedTranslations);
+                    document.documentElement.lang = cachedLang;
+                    
+                    // Apply translations after DOM is ready but before rendering
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', function() {
+                            applyTranslationsSync(translations);
+                        });
+                    } else {
+                        applyTranslationsSync(translations);
+                    }
+                    
+                    function applyTranslationsSync(trans) {
+                        document.querySelectorAll('[data-i18n]').forEach(function(element) {
+                            const key = element.getAttribute('data-i18n');
+                            const translation = key.split('.').reduce(function(o, k) { 
+                                return (o || {})[k]; 
+                            }, trans);
+                            
+                            if (translation) {
+                                const tagName = element.tagName.toUpperCase();
+                                if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+                                    element.placeholder = translation;
+                                } else {
+                                    element.textContent = translation;
+                                }
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Could not apply cached translations:', e);
+                }
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="dashboard-container">

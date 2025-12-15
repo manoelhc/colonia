@@ -27,6 +27,12 @@
                 return {};
             }
             const data = await response.json();
+            // Cache translations in localStorage for instant access on next load
+            try {
+                localStorage.setItem(`translations_${lang}`, JSON.stringify(data));
+            } catch (e) {
+                console.warn('Could not cache translations:', e);
+            }
             return data;
         } catch (error) {
             console.error('Error loading translations:', error);
