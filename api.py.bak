@@ -85,9 +85,8 @@ def create_project_handler(request: Request, app) -> Response:
         # Parse request body
         body = request.body
         if not body:
-            response = Response(
-                json.dumps({"error": "Request body is required"}), status=400
-            )
+            response = Response(json.dumps({"error": "Request body is required"}))
+            response.status = 400
             response.set_header("Content-Type", "application/json")
             return response
 
@@ -96,7 +95,8 @@ def create_project_handler(request: Request, app) -> Response:
         # Validate input data
         is_valid, error_message = validate_project_data(data)
         if not is_valid:
-            response = Response(json.dumps({"error": error_message}), status=400)
+            response = Response(json.dumps({"error": error_message}))
+            response.status = 400
             response.set_header("Content-Type", "application/json")
             return response
 
@@ -127,20 +127,19 @@ def create_project_handler(request: Request, app) -> Response:
                     "updated_at": project.updated_at.isoformat(),
                 }
             )
-            response = Response(response_body, status=201)
+            response = Response(response_body)
+            response.status = 201
             response.set_header("Content-Type", "application/json")
             return response
 
     except json.JSONDecodeError:
-        response = Response(
-            json.dumps({"error": "Invalid JSON in request body"}), status=400
-        )
+        response = Response(json.dumps({"error": "Invalid JSON in request body"}))
+        response.status = 400
         response.set_header("Content-Type", "application/json")
         return response
     except Exception as e:
-        response = Response(
-            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
-        )
+        response = Response(json.dumps({"error": f"Internal server error: {str(e)}"}))
+        response.status = 500
         response.set_header("Content-Type", "application/json")
         return response
 
@@ -164,14 +163,14 @@ def list_projects_handler(request: Request, app) -> Response:
                 for project in projects
             ]
 
-            response = Response(json.dumps({"projects": projects_data}), status=200)
+            response = Response(json.dumps({"projects": projects_data}))
+            response.status = 200
             response.set_header("Content-Type", "application/json")
             return response
 
     except Exception as e:
-        response = Response(
-            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
-        )
+        response = Response(json.dumps({"error": f"Internal server error: {str(e)}"}))
+        response.status = 500
         response.set_header("Content-Type", "application/json")
         return response
 
@@ -183,7 +182,8 @@ def get_project_handler(request: Request, app, project_id: str) -> Response:
         try:
             pid = int(project_id)
         except ValueError:
-            response = Response(json.dumps({"error": "Invalid project ID"}), status=400)
+            response = Response(json.dumps({"error": "Invalid project ID"}))
+            response.status = 400
             response.set_header("Content-Type", "application/json")
             return response
 
@@ -191,9 +191,8 @@ def get_project_handler(request: Request, app, project_id: str) -> Response:
             project = session.get(Project, pid)
 
             if not project:
-                response = Response(
-                    json.dumps({"error": "Project not found"}), status=404
-                )
+                response = Response(json.dumps({"error": "Project not found"}))
+                response.status = 404
                 response.set_header("Content-Type", "application/json")
                 return response
 
@@ -207,14 +206,14 @@ def get_project_handler(request: Request, app, project_id: str) -> Response:
                     "updated_at": project.updated_at.isoformat(),
                 }
             )
-            response = Response(response_body, status=200)
+            response = Response(response_body)
+            response.status = 200
             response.set_header("Content-Type", "application/json")
             return response
 
     except Exception as e:
-        response = Response(
-            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
-        )
+        response = Response(json.dumps({"error": f"Internal server error: {str(e)}"}))
+        response.status = 500
         response.set_header("Content-Type", "application/json")
         return response
 
@@ -226,16 +225,16 @@ def update_project_handler(request: Request, app, project_id: str) -> Response:
         try:
             pid = int(project_id)
         except ValueError:
-            response = Response(json.dumps({"error": "Invalid project ID"}), status=400)
+            response = Response(json.dumps({"error": "Invalid project ID"}))
+            response.status = 400
             response.set_header("Content-Type", "application/json")
             return response
 
         # Parse request body
         body = request.body
         if not body:
-            response = Response(
-                json.dumps({"error": "Request body is required"}), status=400
-            )
+            response = Response(json.dumps({"error": "Request body is required"}))
+            response.status = 400
             response.set_header("Content-Type", "application/json")
             return response
 
@@ -244,7 +243,8 @@ def update_project_handler(request: Request, app, project_id: str) -> Response:
         # Validate input data
         is_valid, error_message = validate_project_data(data)
         if not is_valid:
-            response = Response(json.dumps({"error": error_message}), status=400)
+            response = Response(json.dumps({"error": error_message}))
+            response.status = 400
             response.set_header("Content-Type", "application/json")
             return response
 
@@ -252,9 +252,8 @@ def update_project_handler(request: Request, app, project_id: str) -> Response:
             project = session.get(Project, pid)
 
             if not project:
-                response = Response(
-                    json.dumps({"error": "Project not found"}), status=404
-                )
+                response = Response(json.dumps({"error": "Project not found"}))
+                response.status = 404
                 response.set_header("Content-Type", "application/json")
                 return response
 
@@ -280,20 +279,19 @@ def update_project_handler(request: Request, app, project_id: str) -> Response:
                     "updated_at": project.updated_at.isoformat(),
                 }
             )
-            response = Response(response_body, status=200)
+            response = Response(response_body)
+            response.status = 200
             response.set_header("Content-Type", "application/json")
             return response
 
     except json.JSONDecodeError:
-        response = Response(
-            json.dumps({"error": "Invalid JSON in request body"}), status=400
-        )
+        response = Response(json.dumps({"error": "Invalid JSON in request body"}))
+        response.status = 400
         response.set_header("Content-Type", "application/json")
         return response
     except Exception as e:
-        response = Response(
-            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
-        )
+        response = Response(json.dumps({"error": f"Internal server error: {str(e)}"}))
+        response.status = 500
         response.set_header("Content-Type", "application/json")
         return response
 
@@ -305,7 +303,8 @@ def delete_project_handler(request: Request, app, project_id: str) -> Response:
         try:
             pid = int(project_id)
         except ValueError:
-            response = Response(json.dumps({"error": "Invalid project ID"}), status=400)
+            response = Response(json.dumps({"error": "Invalid project ID"}))
+            response.status = 400
             response.set_header("Content-Type", "application/json")
             return response
 
@@ -313,23 +312,20 @@ def delete_project_handler(request: Request, app, project_id: str) -> Response:
             project = session.get(Project, pid)
 
             if not project:
-                response = Response(
-                    json.dumps({"error": "Project not found"}), status=404
-                )
+                response = Response(json.dumps({"error": "Project not found"}))
+                response.status = 404
                 response.set_header("Content-Type", "application/json")
                 return response
 
             session.delete(project)
 
-            response = Response(
-                json.dumps({"message": "Project deleted successfully"}), status=200
-            )
+            response = Response(json.dumps({"message": "Project deleted successfully"}))
+            response.status = 200
             response.set_header("Content-Type", "application/json")
             return response
 
     except Exception as e:
-        response = Response(
-            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
-        )
+        response = Response(json.dumps({"error": f"Internal server error: {str(e)}"}))
+        response.status = 500
         response.set_header("Content-Type", "application/json")
         return response
