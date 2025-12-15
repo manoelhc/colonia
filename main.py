@@ -89,7 +89,7 @@ def api_projects(request: Request) -> Response:
         return list_projects_handler(request, app)
 
 
-@app.route("/api/projects/{project_id}", methods=["GET", "PUT", "DELETE"])
+@app.route("/api/projects/<project_id>", methods=["GET", "PUT", "DELETE"])
 def api_project(request: Request, project_id: str) -> Response:
     """Handle single project API endpoint."""
     if request.method == "GET":
