@@ -7,12 +7,16 @@
     "dashboard": "Panel",
     "projects": "Proyectos",
     "stacks": "Pilas",
+    "environments": "Entornos",
+    "contexts": "Contextos",
     "settings": "Configuración"
   },
   "page": {
     "dashboard": "Panel",
     "projects": "Proyectos",
     "stacks": "Pilas",
+    "environments": "Entornos",
+    "contexts": "Contextos",
     "settings": "Configuración"
   },
   "content": {
@@ -32,6 +36,18 @@
     "description": "Gestiona tus pilas de infraestructura. Las pilas son la unidad central de gestión de infraestructura en Colonia.",
     "list": "Lista de Pilas",
     "no_stacks": "No se encontraron pilas. Crea tu primera pila para comenzar a gestionar infraestructura."
+  },
+  "environments": {
+    "title": "Entornos",
+    "description": "Gestiona entornos de implementación para tus proyectos. Define y organiza diferentes etapas como desarrollo, preparación y producción.",
+    "list": "Lista de Entornos",
+    "no_environments": "No se encontraron entornos. Crea tu primer entorno para organizar implementaciones."
+  },
+  "contexts": {
+    "title": "Contextos",
+    "description": "Gestiona colecciones compartibles de variables de entorno. Los contextos se pueden compartir entre múltiples pilas para simplificar la gestión de configuración.",
+    "list": "Lista de Contextos",
+    "no_contexts": "No se encontraron contextos. Crea tu primer contexto para compartir variables de entorno entre pilas."
   },
   "settings": {
     "title": "Configuración",

@@ -49,6 +49,20 @@ def settings(request: Request) -> dict:
         "title": "Colonia Settings"
     }
 
+@app.template("/environments", template="environments.html.tpl")
+def environments(request: Request) -> dict:
+    """Render environments page with context data"""
+    return {
+        "title": "Colonia Environments"
+    }
+
+@app.template("/contexts", template="contexts.html.tpl")
+def contexts(request: Request) -> dict:
+    """Render contexts page with context data"""
+    return {
+        "title": "Colonia Contexts"
+    }
+
 def main():
     """Run the Colonia web server."""
     print("Starting Colonia Dashboard...")

@@ -7,12 +7,16 @@
     "dashboard": "Painel",
     "projects": "Projetos",
     "stacks": "Pilhas",
+    "environments": "Ambientes",
+    "contexts": "Contextos",
     "settings": "Configurações"
   },
   "page": {
     "dashboard": "Painel",
     "projects": "Projetos",
     "stacks": "Pilhas",
+    "environments": "Ambientes",
+    "contexts": "Contextos",
     "settings": "Configurações"
   },
   "content": {
@@ -32,6 +36,18 @@
     "description": "Gerencie suas pilhas de infraestrutura. Pilhas são a unidade central de gerenciamento de infraestrutura no Colonia.",
     "list": "Lista de Pilhas",
     "no_stacks": "Nenhuma pilha encontrada. Crie sua primeira pilha para começar a gerenciar infraestrutura."
+  },
+  "environments": {
+    "title": "Ambientes",
+    "description": "Gerencie ambientes de implantação para seus projetos. Defina e organize diferentes estágios como desenvolvimento, homologação e produção.",
+    "list": "Lista de Ambientes",
+    "no_environments": "Nenhum ambiente encontrado. Crie seu primeiro ambiente para organizar implantações."
+  },
+  "contexts": {
+    "title": "Contextos",
+    "description": "Gerencie coleções compartilháveis de variáveis de ambiente. Contextos podem ser compartilhados entre várias pilhas para simplificar o gerenciamento de configuração.",
+    "list": "Lista de Contextos",
+    "no_contexts": "Nenhum contexto encontrado. Crie seu primeiro contexto para compartilhar variáveis de ambiente entre pilhas."
   },
   "settings": {
     "title": "Configurações",
