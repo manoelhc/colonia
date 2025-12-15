@@ -9,3 +9,10 @@ dependencies = [
     # Using a specific tag
     "rupy-api @ git+https://github.com/manoelhc/rupy.git@v0.1.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0.0",
+    "black>=21.0.0",
+    "flake8>=3.8.0",
+]
