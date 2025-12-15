@@ -7,10 +7,10 @@ requires-python = ">=3.14"
 
 dependencies = [
     # Using a specific tag
-    "rupy-api @ git+https://github.com/manoelhc/rupy.git@v0.1.0",
-    "sqlalchemy>=2.0.0",
-    "sqlmodel>=0.0.22",
-    "alembic>=1.13.0",
+    "rupy-api >=v0.1.7",
+    "sqlalchemy>=2.0.45",
+    "sqlmodel>=0.0.27",
+    "alembic>=1.17.2",
 ]
 
 [dependency-groups]

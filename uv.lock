@@ -79,10 +79,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic", specifier = ">=1.13.0" },
-    { name = "rupy-api", git = "https://github.com/manoelhc/rupy.git?rev=v0.1.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.0" },
-    { name = "sqlmodel", specifier = ">=0.0.22" },
+    { name = "alembic", specifier = ">=1.17.2" },
+    { name = "rupy-api", specifier = ">=0.1.7" },
+    { name = "sqlalchemy", specifier = ">=2.0.45" },
+    { name = "sqlmodel", specifier = ">=0.0.27" },
 ]
 
 [package.metadata.requires-dev]
@@ -351,8 +351,13 @@ wheels = [
 
 [[package]]
 name = "rupy-api"
-version = "0.1.0"
-source = { git = "https://github.com/manoelhc/rupy.git?rev=v0.1.0#251e11cf9c7a9afa832dc593dd45c8f6f5b51440" }
+version = "0.1.7"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d5/f2/3517c3451593ab8d076f88e9cbd15d9df802cd98d7c9caef0ca082ea8dfc/rupy_api-0.1.7-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:3c4ddf912f35a34c762596cf117cefbb3587180f67e5e1881c91be3e89c8fccd", size = 1796902, upload-time = "2025-12-15T23:40:37.88Z" },
+    { url = "https://files.pythonhosted.org/packages/ad/3d/c9ce834ce17f444f0f2ec00a756b8a9feb7642daa6fdb59c01456462dc3f/rupy_api-0.1.7-cp314-cp314-manylinux_2_34_x86_64.whl", hash = "sha256:6dd1d106c285ad63e184d413895bf1b3456fc803afe73b394b7aac1de77d7be2", size = 2006863, upload-time = "2025-12-15T23:40:39.119Z" },
+    { url = "https://files.pythonhosted.org/packages/00/ed/90adfdfe1a480bec02cceeb577b14a8687b81263434269010401fc0adeb7/rupy_api-0.1.7-cp314-cp314-win_amd64.whl", hash = "sha256:665bc67f05cdfd092f9a436966dadeb29d70db13d2d2a92198782f017ce6f0e7", size = 1592607, upload-time = "2025-12-15T23:40:40.713Z" },
+]
 
 [[package]]
 name = "sqlalchemy"
