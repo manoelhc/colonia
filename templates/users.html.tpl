@@ -88,7 +88,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/stacks" class="active">
+                        <a href="/stacks">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                             </svg>
@@ -121,7 +121,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/users">
+                        <a href="/users" class="active">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                             </svg>
@@ -145,7 +145,7 @@
             <!-- Top Navbar -->
             <header class="top-navbar">
                 <div class="navbar-inner">
-                    <h2 data-i18n="page.stacks">Stacks</h2>
+                    <h2 data-i18n="page.users">Users</h2>
                     <div class="navbar-actions">
                         <!-- Language Selector -->
                         <select id="languageSelector">
@@ -177,19 +177,19 @@
             <!-- Content Area -->
             <main class="content-area">
                 <div class="content-wrapper">
-                    <!-- Stacks Overview Card -->
+                    <!-- Users Overview Card -->
                     <div class="card">
-                        <h3 data-i18n="stacks.title">Stacks</h3>
-                        <p data-i18n="stacks.description">Manage your infrastructure stacks. Stacks are the core unit of infrastructure management in Colonia.</p>
+                        <h3 data-i18n="users.title">Users</h3>
+                        <p data-i18n="users.description">Manage user accounts and permissions. Control access to your Colonia instance and projects.</p>
                     </div>
 
-                    <!-- Stacks List -->
+                    <!-- Users List -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4 data-i18n="stacks.list">Stack List</h4>
+                            <h4 data-i18n="users.list">User List</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="stacks.no_stacks">No stacks found. Create your first stack to begin managing infrastructure.</p>
+                            <p data-i18n="users.no_users">No users found. Invite users to collaborate on your projects.</p>
                         </div>
                     </div>
                 </div>

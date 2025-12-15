@@ -9,7 +9,9 @@
     "stacks": "Stacks",
     "environments": "Environments",
     "contexts": "Contexts",
-    "settings": "Settings"
+    "settings": "Settings",
+    "users": "Users",
+    "teams": "Teams"
   },
   "page": {
     "dashboard": "Dashboard",
@@ -17,7 +19,9 @@
     "stacks": "Stacks",
     "environments": "Environments",
     "contexts": "Contexts",
-    "settings": "Settings"
+    "settings": "Settings",
+    "users": "Users",
+    "teams": "Teams"
   },
   "content": {
     "welcome": "Welcome to Colonia",
@@ -54,6 +58,18 @@
     "description": "Configure your Colonia instance and manage your preferences.",
     "general": "General Settings",
     "general_description": "General configuration options will appear here."
+  },
+  "users": {
+    "title": "Users",
+    "description": "Manage user accounts and permissions. Control access to your Colonia instance and projects.",
+    "list": "User List",
+    "no_users": "No users found. Invite users to collaborate on your projects."
+  },
+  "teams": {
+    "title": "Teams",
+    "description": "Manage teams and group permissions. Organize users into teams for efficient access control.",
+    "list": "Team List",
+    "no_teams": "No teams found. Create teams to organize users and manage permissions."
   },
   "stats": {
     "projects": "Projects",

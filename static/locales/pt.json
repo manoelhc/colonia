@@ -9,7 +9,9 @@
     "stacks": "Pilhas",
     "environments": "Ambientes",
     "contexts": "Contextos",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "users": "Usuários",
+    "teams": "Equipes"
   },
   "page": {
     "dashboard": "Painel",
@@ -17,7 +19,9 @@
     "stacks": "Pilhas",
     "environments": "Ambientes",
     "contexts": "Contextos",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "users": "Usuários",
+    "teams": "Equipes"
   },
   "content": {
     "welcome": "Bem-vindo ao Colonia",
@@ -54,6 +58,18 @@
     "description": "Configure sua instância Colonia e gerencie suas preferências.",
     "general": "Configurações Gerais",
     "general_description": "As opções de configuração geral aparecerão aqui."
+  },
+  "users": {
+    "title": "Usuários",
+    "description": "Gerencie contas de usuários e permissões. Controle o acesso à sua instância Colonia e projetos.",
+    "list": "Lista de Usuários",
+    "no_users": "Nenhum usuário encontrado. Convide usuários para colaborar em seus projetos."
+  },
+  "teams": {
+    "title": "Equipes",
+    "description": "Gerencie equipes e permissões em grupo. Organize usuários em equipes para controle de acesso eficiente.",
+    "list": "Lista de Equipes",
+    "no_teams": "Nenhuma equipe encontrada. Crie equipes para organizar usuários e gerenciar permissões."
   },
   "stats": {
     "projects": "Projetos",

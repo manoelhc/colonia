@@ -63,6 +63,20 @@ def contexts(request: Request) -> dict:
         "title": "Colonia Contexts"
     }
 
+@app.template("/users", template="users.html.tpl")
+def users(request: Request) -> dict:
+    """Render users page with context data"""
+    return {
+        "title": "Colonia Users"
+    }
+
+@app.template("/teams", template="teams.html.tpl")
+def teams(request: Request) -> dict:
+    """Render teams page with context data"""
+    return {
+        "title": "Colonia Teams"
+    }
+
 def main():
     """Run the Colonia web server."""
     print("Starting Colonia Dashboard...")
