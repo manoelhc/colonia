@@ -18,8 +18,8 @@
     <script>
         // Apply cached translations immediately to prevent flash
         (function() {
-            const lang = localStorage.getItem('language') || 
-                        (navigator.language || navigator.userLanguage).split('-')[0];
+            const browserLang = (navigator.language || navigator.userLanguage || 'en-US');
+            const lang = localStorage.getItem('language') || browserLang.split('-')[0];
             const cachedLang = ['en', 'pt', 'es'].includes(lang) ? lang : 'en';
             const cachedTranslations = localStorage.getItem('translations_' + cachedLang);
             
