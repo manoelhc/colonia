@@ -3,6 +3,7 @@ import mimetypes
 from rupy import Rupy, Response, Request
 
 app = Rupy()
+app.set_template_directory("./templates")
 
 static_dir = "./static"
 
@@ -25,6 +26,55 @@ def index(request: Request) -> dict:
     """Render template with context data"""
     return {
         "title": "Colonia Dashboard"
+    }
+
+@app.template("/projects", template="projects.html.tpl")
+def projects(request: Request) -> dict:
+    """Render projects page with context data"""
+    return {
+        "title": "Colonia Projects"
+    }
+
+@app.template("/stacks", template="stacks.html.tpl")
+def stacks(request: Request) -> dict:
+    """Render stacks page with context data"""
+    return {
+        "title": "Colonia Stacks"
+    }
+
+@app.template("/settings", template="settings.html.tpl")
+def settings(request: Request) -> dict:
+    """Render settings page with context data"""
+    return {
+        "title": "Colonia Settings"
+    }
+
+@app.template("/environments", template="environments.html.tpl")
+def environments(request: Request) -> dict:
+    """Render environments page with context data"""
+    return {
+        "title": "Colonia Environments"
+    }
+
+@app.template("/contexts", template="contexts.html.tpl")
+def contexts(request: Request) -> dict:
+    """Render contexts page with context data"""
+    return {
+        "title": "Colonia Contexts"
+    }
+
+@app.template("/users", template="users.html.tpl")
+def users(request: Request) -> dict:
+    """Render users page with context data"""
+    return {
+        "title": "Colonia Users"
+    }
+
+@app.template("/teams", template="teams.html.tpl")
+def teams(request: Request) -> dict:
+    """Render teams page with context data"""
+    return {
+        "title": "Colonia Teams"
     }
 
 def main():

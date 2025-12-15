@@ -7,16 +7,69 @@
     "dashboard": "Panel",
     "projects": "Proyectos",
     "stacks": "Pilas",
-    "settings": "Configuración"
+    "environments": "Entornos",
+    "contexts": "Contextos",
+    "settings": "Configuración",
+    "users": "Usuarios",
+    "teams": "Equipos"
   },
   "page": {
-    "dashboard": "Panel"
+    "dashboard": "Panel",
+    "projects": "Proyectos",
+    "stacks": "Pilas",
+    "environments": "Entornos",
+    "contexts": "Contextos",
+    "settings": "Configuración",
+    "users": "Usuarios",
+    "teams": "Equipos"
   },
   "content": {
     "welcome": "Bienvenido a Colonia",
     "description": "Tu plataforma de automatización de infraestructura de código abierto. Gestiona tu infraestructura como código con facilidad.",
     "recent_activity": "Actividad Reciente",
     "no_activity": "No hay actividad reciente"
+  },
+  "projects": {
+    "title": "Proyectos",
+    "description": "Gestiona tus proyectos de infraestructura. Cada proyecto representa una colección de pilas y recursos.",
+    "list": "Lista de Proyectos",
+    "no_projects": "No se encontraron proyectos. Crea tu primer proyecto para comenzar."
+  },
+  "stacks": {
+    "title": "Pilas",
+    "description": "Gestiona tus pilas de infraestructura. Las pilas son la unidad central de gestión de infraestructura en Colonia.",
+    "list": "Lista de Pilas",
+    "no_stacks": "No se encontraron pilas. Crea tu primera pila para comenzar a gestionar infraestructura."
+  },
+  "environments": {
+    "title": "Entornos",
+    "description": "Gestiona entornos de implementación para tus proyectos. Define y organiza diferentes etapas como desarrollo, preparación y producción.",
+    "list": "Lista de Entornos",
+    "no_environments": "No se encontraron entornos. Crea tu primer entorno para organizar implementaciones."
+  },
+  "contexts": {
+    "title": "Contextos",
+    "description": "Gestiona colecciones compartibles de variables de entorno. Los contextos se pueden compartir entre múltiples pilas para simplificar la gestión de configuración.",
+    "list": "Lista de Contextos",
+    "no_contexts": "No se encontraron contextos. Crea tu primer contexto para compartir variables de entorno entre pilas."
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Configura tu instancia de Colonia y gestiona tus preferencias.",
+    "general": "Configuración General",
+    "general_description": "Las opciones de configuración general aparecerán aquí."
+  },
+  "users": {
+    "title": "Usuarios",
+    "description": "Gestiona cuentas de usuario y permisos. Controla el acceso a tu instancia de Colonia y proyectos.",
+    "list": "Lista de Usuarios",
+    "no_users": "No se encontraron usuarios. Invita usuarios para colaborar en tus proyectos."
+  },
+  "teams": {
+    "title": "Equipos",
+    "description": "Gestiona equipos y permisos de grupo. Organiza usuarios en equipos para un control de acceso eficiente.",
+    "list": "Lista de Equipos",
+    "no_teams": "No se encontraron equipos. Crea equipos para organizar usuarios y gestionar permisos."
   },
   "stats": {
     "projects": "Proyectos",
