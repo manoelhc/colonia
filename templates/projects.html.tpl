@@ -179,8 +179,18 @@
                 <div class="content-wrapper">
                     <!-- Projects Overview Card -->
                     <div class="card">
-                        <h3 data-i18n="projects.title">Projects</h3>
-                        <p data-i18n="projects.description">Manage your infrastructure projects. Each project represents a collection of stacks and resources.</p>
+                        <div class="card-header-with-action">
+                            <div>
+                                <h3 data-i18n="projects.title">Projects</h3>
+                                <p data-i18n="projects.description">Manage your infrastructure projects. Each project represents a collection of stacks and resources.</p>
+                            </div>
+                            <button id="addProjectBtn" class="btn-primary">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span data-i18n="projects.add">Add Project</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Projects List -->
@@ -188,8 +198,8 @@
                         <div class="activity-header">
                             <h4 data-i18n="projects.list">Project List</h4>
                         </div>
-                        <div class="activity-content">
-                            <p data-i18n="projects.no_projects">No projects found. Create your first project to get started.</p>
+                        <div id="projectsList" class="projects-grid">
+                            <p class="loading" data-i18n="projects.loading">Loading projects...</p>
                         </div>
                     </div>
                 </div>
@@ -212,8 +222,41 @@
         </div>
     </div>
 
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create New Project</h3>
+                <button class="modal-close" type="button">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="projectForm" class="modal-body">
+                <div class="form-group">
+                    <label for="projectName">Project Name <span class="required">*</span></label>
+                    <input type="text" id="projectName" name="name" required maxlength="255" placeholder="Enter project name">
+                </div>
+                <div class="form-group">
+                    <label for="projectDescription">Description</label>
+                    <textarea id="projectDescription" name="description" maxlength="1000" rows="4" placeholder="Enter project description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="projectRepository">Repository URL</label>
+                    <input type="url" id="projectRepository" name="repository_url" maxlength="500" placeholder="https://github.com/user/repo">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/projects.js"></script>
 </body>
 </html>
