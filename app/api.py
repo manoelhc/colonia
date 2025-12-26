@@ -6,8 +6,8 @@ import logging
 from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
-from sqlmodel import select
-from models import Project
+from sqlmodel import select, func
+from models import Project, Environment, Stack, StackEnvironment
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
 
@@ -412,6 +412,126 @@ def trigger_repo_scan_handler(request: Request, app, project_id: str) -> Respons
             return response
 
     except Exception as e:
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_stats_handler(request: Request, app) -> Response:
+    """Get statistics for dashboard."""
+    try:
+        with get_session() as session:
+            # Count projects
+            projects_count = session.exec(select(func.count(Project.id))).one()
+            
+            # Count stacks
+            stacks_count = session.exec(select(func.count(Stack.id))).one()
+            
+            # Count environments
+            environments_count = session.exec(select(func.count(Environment.id))).one()
+
+            stats_data = {
+                "projects": projects_count,
+                "stacks": stacks_count,
+                "environments": environments_count,
+                "runs": 0,  # Placeholder for future implementation
+                "resources": 0,  # Placeholder for future implementation
+            }
+
+            response = Response(json.dumps(stats_data), status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error fetching stats: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_stacks_grouped_handler(request: Request, app) -> Response:
+    """Get stacks grouped by project and environment."""
+    try:
+        with get_session() as session:
+            # Fetch all projects
+            projects = session.exec(select(Project).order_by(Project.name)).all()
+            
+            result = []
+            
+            for project in projects:
+                # Fetch environments for this project
+                environments = session.exec(
+                    select(Environment)
+                    .where(Environment.project_id == project.id)
+                    .order_by(Environment.name)
+                ).all()
+                
+                # Fetch all stacks for this project
+                project_stacks = session.exec(
+                    select(Stack)
+                    .where(Stack.project_id == project.id)
+                    .order_by(Stack.name)
+                ).all()
+                
+                # Fetch all stack-environment relationships for this project
+                stack_env_relationships = session.exec(
+                    select(StackEnvironment)
+                    .where(StackEnvironment.stack_id.in_([s.id for s in project_stacks]))
+                ).all()
+                
+                # Create a mapping of environment_id to stack_ids
+                env_to_stacks = {}
+                for rel in stack_env_relationships:
+                    if rel.environment_id not in env_to_stacks:
+                        env_to_stacks[rel.environment_id] = []
+                    env_to_stacks[rel.environment_id].append(rel.stack_id)
+                
+                # Create a mapping of stack_id to stack object
+                stacks_by_id = {stack.id: stack for stack in project_stacks}
+                
+                project_data = {
+                    "id": project.id,
+                    "name": project.name,
+                    "environments": []
+                }
+                
+                for environment in environments:
+                    # Get stacks for this environment
+                    stack_ids = env_to_stacks.get(environment.id, [])
+                    stacks = [stacks_by_id[sid] for sid in stack_ids if sid in stacks_by_id]
+                    
+                    stacks_data = [
+                        {
+                            "id": stack.id,
+                            "name": stack.name,
+                            "stack_id": stack.stack_id,
+                            "stack_path": stack.stack_path,
+                            "depends_on": stack.depends_on or [],
+                        }
+                        for stack in stacks
+                    ]
+                    
+                    if stacks_data:
+                        project_data["environments"].append({
+                            "id": environment.id,
+                            "name": environment.name,
+                            "stacks": stacks_data
+                        })
+                
+                # Only add project if it has environments with stacks
+                if project_data["environments"]:
+                    result.append(project_data)
+
+            response = Response(json.dumps({"projects": result}), status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error fetching grouped stacks: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )

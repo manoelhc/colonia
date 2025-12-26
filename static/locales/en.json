@@ -74,7 +74,7 @@
   "stats": {
     "projects": "Projects",
     "stacks": "Stacks",
-    "runs": "Runs",
+    "environments": "Environments",
     "resources": "Resources"
   },
   "footer": {

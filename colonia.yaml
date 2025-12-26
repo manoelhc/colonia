@@ -6,12 +6,16 @@ environments:
 
 stacks:
   - name: "VPC"
+    id: vpc
     environments:
       - development
       - staging
     stack: stacks/vpc
   - name: "ECS"
+    id: ecs
     environments:
       - development
       - staging
     stack: stacks/ecs
+    depends_on:
+      - vpc
