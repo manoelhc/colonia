@@ -82,12 +82,35 @@ uv run alembic downgrade <revision_id>
 
 ## 5. Run Colonia
 
-### Option 1: Using Docker Compose (Recommended)
+### Development Setup (Recommended)
 
-Start all services (RabbitMQ, web application, and repository scanner) with a single command:
+For development with hot-reload, start only RabbitMQ with Docker and run the app and consumer manually:
 
+**1. Start RabbitMQ:**
 ```bash
 docker compose up -d
+```
+
+**2. Start the web application (in one terminal):**
+```bash
+uv run python -m main
+```
+
+**3. Start the repository scanner (in another terminal):**
+```bash
+uv run python repo-scan.py
+```
+
+The application will be available at `http://localhost:8000`
+
+This approach provides the best development experience with instant code reload.
+
+### Production Setup with Docker Compose
+
+For production or testing the full stack with Docker:
+
+```bash
+docker compose -f docker-compose.full.yml up -d
 ```
 
 This will start:
@@ -95,54 +118,27 @@ This will start:
 - **Colonia App**: Web application on port 8000
 - **Repo Scanner**: Consumer that processes repository scans
 
-The application will be available at `http://localhost:8000`
-
 To view logs:
 ```bash
-docker compose logs -f
+docker compose -f docker-compose.full.yml logs -f
 ```
 
 To stop all services:
 ```bash
-docker compose down
+docker compose -f docker-compose.full.yml down
 ```
 
-**Hot Reload**: The source code is mounted as a volume, so changes to Python files will be reflected automatically (you may need to restart the containers for some changes).
-
-### Option 2: Manual Setup
-
-Start the development server manually:
-```bash
-uv run python -m main
-```
-
-The application will be available at `http://localhost:8000`
+**Note**: Source code is mounted as a volume for hot-reload functionality.
 
 ## 6. RabbitMQ Integration
 
 Colonia uses RabbitMQ for asynchronous repository scanning. When a project is created with a repository URL, the backend sends a message to RabbitMQ, which triggers the `repo-scan.py` consumer to fetch and process the `colonia.yaml` file from the repository.
 
-### Starting RabbitMQ (if not using Docker Compose)
-
-Use Docker Compose to start only RabbitMQ:
-```bash
-docker compose up -d rabbitmq
-```
+### RabbitMQ Access
 
 RabbitMQ will be available at:
 - AMQP: `localhost:5672`
 - Management UI: `http://localhost:15672` (username: `colonia`, password: `colonia`)
-
-### Running the Repository Scanner (if not using Docker Compose)
-
-Start the repository scanner consumer in a separate terminal:
-```bash
-uv run python repo-scan.py
-```
-
-The scanner will:
-1. Listen for messages from RabbitMQ
-2. Fetch `colonia.yaml` from the repository
 3. Create/update/delete environments and stacks based on the YAML configuration
 
 ### colonia.yaml Format

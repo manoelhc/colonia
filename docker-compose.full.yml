@@ -1,0 +1,71 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: colonia-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: colonia
+      RABBITMQ_DEFAULT_PASS: colonia
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - colonia-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: colonia-app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/data/colonia.db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=colonia
+      - RABBITMQ_PASS=colonia
+    volumes:
+      - ./:/app
+      - db_data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - colonia-network
+    restart: unless-stopped
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: colonia-consumer
+    environment:
+      - DATABASE_URL=sqlite:////app/data/colonia.db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=colonia
+      - RABBITMQ_PASS=colonia
+    volumes:
+      - ./:/app
+      - db_data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - colonia-network
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+  db_data:
+
+networks:
+  colonia-network:
+    driver: bridge
