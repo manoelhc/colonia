@@ -2,8 +2,13 @@
 
 import os
 import json
+import logging
 import pika
 from typing import Optional
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def get_rabbitmq_connection() -> pika.BlockingConnection:
@@ -48,8 +53,9 @@ def send_project_scan_message(project_id: int, project_name: str, repository_url
         )
 
         connection.close()
+        logger.info(f"Sent repo scan message for project {project_id}")
         return True
 
     except Exception as e:
-        print(f"Error sending message to RabbitMQ: {e}")
+        logger.error(f"Error sending message to RabbitMQ for project {project_id}: {e}", exc_info=True)
         return False

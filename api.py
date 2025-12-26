@@ -2,6 +2,7 @@
 
 import json
 import re
+import logging
 from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
@@ -9,6 +10,10 @@ from sqlmodel import select
 from models import Project
 from database import get_session
 from rabbitmq import send_project_scan_message
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def sanitize_string(value: str, max_length: Optional[int] = None) -> str:
@@ -119,7 +124,12 @@ def create_project_handler(request: Request, app) -> Response:
 
             # Send message to RabbitMQ for repo scan
             if repository_url:
-                send_project_scan_message(project.id, project.name, project.repository_url)
+                try:
+                    success = send_project_scan_message(project.id, project.name, project.repository_url)
+                    if not success:
+                        logger.warning(f"Failed to send RabbitMQ message for project {project.id}")
+                except Exception as e:
+                    logger.error(f"Exception while sending RabbitMQ message for project {project.id}: {e}", exc_info=True)
 
             # Return created project
             response_body = json.dumps(
