@@ -638,3 +638,155 @@ html, body {
         max-width: none;
     }
 }
+
+/* Stacks Hierarchy Styles */
+.stacks-hierarchy {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.project-group {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.project-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.project-header .icon {
+    width: 28px;
+    height: 28px;
+    color: var(--primary);
+}
+
+.project-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.environments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.environment-group {
+    background: var(--bg-primary);
+    border-radius: 6px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+}
+
+.environment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.environment-header .icon {
+    width: 20px;
+    height: 20px;
+    color: var(--secondary);
+}
+
+.environment-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.stacks-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.stack-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    min-width: 200px;
+    transition: all 0.2s;
+}
+
+.stack-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.stack-card.has-dependencies {
+    border-left: 3px solid var(--accent);
+}
+
+.stack-icon {
+    flex-shrink: 0;
+}
+
+.stack-icon svg {
+    width: 24px;
+    height: 24px;
+    color: var(--primary);
+}
+
+.stack-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.stack-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.stack-id {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+    margin-bottom: 0.25rem;
+}
+
+.stack-dependencies {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-top: 0.5rem;
+}
+
+.stack-dependencies .dep-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.stack-dependencies span {
+    font-family: monospace;
+}
+
+/* Dark mode adjustments */
+.dark .project-group {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark .stack-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}

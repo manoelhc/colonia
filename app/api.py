@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
 from sqlmodel import select, func
-from models import Project, Environment, Stack
+from models import Project, Environment, Stack, StackEnvironment
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
 
@@ -446,6 +446,73 @@ def get_stats_handler(request: Request, app) -> Response:
 
     except Exception as e:
         logger.error(f"Error fetching stats: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_stacks_grouped_handler(request: Request, app) -> Response:
+    """Get stacks grouped by project and environment."""
+    try:
+        with get_session() as session:
+            # Fetch all projects
+            projects = session.exec(select(Project).order_by(Project.name)).all()
+            
+            result = []
+            
+            for project in projects:
+                # Fetch environments for this project
+                environments = session.exec(
+                    select(Environment)
+                    .where(Environment.project_id == project.id)
+                    .order_by(Environment.name)
+                ).all()
+                
+                project_data = {
+                    "id": project.id,
+                    "name": project.name,
+                    "environments": []
+                }
+                
+                for environment in environments:
+                    # Fetch stacks for this environment
+                    stacks = session.exec(
+                        select(Stack)
+                        .join(StackEnvironment, Stack.id == StackEnvironment.stack_id)
+                        .where(StackEnvironment.environment_id == environment.id)
+                        .where(Stack.project_id == project.id)
+                        .order_by(Stack.name)
+                    ).all()
+                    
+                    stacks_data = [
+                        {
+                            "id": stack.id,
+                            "name": stack.name,
+                            "stack_id": stack.stack_id,
+                            "stack_path": stack.stack_path,
+                            "depends_on": stack.depends_on or [],
+                        }
+                        for stack in stacks
+                    ]
+                    
+                    project_data["environments"].append({
+                        "id": environment.id,
+                        "name": environment.name,
+                        "stacks": stacks_data
+                    })
+                
+                # Only add project if it has environments with stacks
+                if any(env["stacks"] for env in project_data["environments"]):
+                    result.append(project_data)
+
+            response = Response(json.dumps({"projects": result}), status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error fetching grouped stacks: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )

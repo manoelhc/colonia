@@ -188,7 +188,7 @@
                         <div class="activity-header">
                             <h4 data-i18n="stacks.list">Stack List</h4>
                         </div>
-                        <div class="activity-content">
+                        <div class="activity-content" id="stacksList">
                             <p data-i18n="stacks.no_stacks">No stacks found. Create your first stack to begin managing infrastructure.</p>
                         </div>
                     </div>
@@ -215,5 +215,6 @@
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/stacks.js"></script>
 </body>
 </html>
