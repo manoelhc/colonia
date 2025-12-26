@@ -9,7 +9,7 @@ services:
       RABBITMQ_DEFAULT_USER: colonia
       RABBITMQ_DEFAULT_PASS: colonia
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq:Z
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 10s
@@ -33,7 +33,7 @@ services:
       - RABBITMQ_PASS=colonia
     volumes:
       - ./:/app
-      - db_data:/app/data
+      - db_data:/app/data:Z
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
       - RABBITMQ_PASS=colonia
     volumes:
       - ./:/app
-      - db_data:/app/data
+      - db_data:/app/data:Z
     depends_on:
       rabbitmq:
         condition: service_healthy
