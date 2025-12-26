@@ -47,7 +47,7 @@
                 const i18nKey = statHeader.getAttribute('data-i18n');
                 const valueElement = card.querySelector('.stat-value');
                 
-                if (valueElement && statValues.hasOwnProperty(i18nKey)) {
+                if (valueElement && i18nKey in statValues) {
                     valueElement.textContent = statValues[i18nKey];
                 }
             }
