@@ -1,11 +1,12 @@
 from rupy import Rupy, Response, Request
-from database import create_db_and_tables
-from api import (
+from app.database import create_db_and_tables
+from app.api import (
     create_project_handler,
     list_projects_handler,
     get_project_handler,
     update_project_handler,
     delete_project_handler,
+    trigger_repo_scan_handler,
 )
 
 app = Rupy()
@@ -98,6 +99,12 @@ def api_project(request: Request, project_id: str) -> Response:
         return update_project_handler(request, app, project_id)
     else:  # DELETE
         return delete_project_handler(request, app, project_id)
+
+
+@app.route("/api/projects/<project_id>/scan", methods=["POST"])
+def api_project_scan(request: Request, project_id: str) -> Response:
+    """Trigger repository scan for a project."""
+    return trigger_repo_scan_handler(request, app, project_id)
 
 
 def main():

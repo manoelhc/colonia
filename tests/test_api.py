@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import pytest
 import json
-from api import (
+from app.api import (
     sanitize_string,
     sanitize_url,
     validate_project_data

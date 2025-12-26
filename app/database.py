@@ -4,8 +4,11 @@ import os
 from sqlmodel import create_engine, Session, SQLModel
 from contextlib import contextmanager
 
-# Database URL - using SQLite3 for testing (can be overridden via environment)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./colonia.db")
+# Database URL - using PostgreSQL by default (can be overridden via environment)
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://colonia:colonia@localhost:5432/colonia"
+)
 
 # Create engine with connection pooling
 engine = create_engine(
@@ -14,6 +17,7 @@ engine = create_engine(
         {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
     ),
     echo=False,  # Set to True for SQL query logging
+    pool_pre_ping=True,  # Verify connections before using them
 )
 
 
