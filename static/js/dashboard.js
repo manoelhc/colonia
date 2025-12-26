@@ -36,7 +36,7 @@
         const statValues = {
             'Projects': stats.projects,
             'Stacks': stats.stacks,
-            'Runs': stats.runs,
+            'Environments': stats.environments,
             'Resources': stats.resources
         };
 
