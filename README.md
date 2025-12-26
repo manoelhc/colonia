@@ -81,7 +81,37 @@ uv run alembic downgrade <revision_id>
 ```
 
 ## 5. Run Colonia
-Start the development server:
+
+### Option 1: Using Docker Compose (Recommended)
+
+Start all services (RabbitMQ, web application, and repository scanner) with a single command:
+
+```bash
+docker compose up -d
+```
+
+This will start:
+- **RabbitMQ**: Message broker on ports 5672 (AMQP) and 15672 (Management UI)
+- **Colonia App**: Web application on port 8000
+- **Repo Scanner**: Consumer that processes repository scans
+
+The application will be available at `http://localhost:8000`
+
+To view logs:
+```bash
+docker compose logs -f
+```
+
+To stop all services:
+```bash
+docker compose down
+```
+
+**Hot Reload**: The source code is mounted as a volume, so changes to Python files will be reflected automatically (you may need to restart the containers for some changes).
+
+### Option 2: Manual Setup
+
+Start the development server manually:
 ```bash
 uv run python -m main
 ```
@@ -92,18 +122,18 @@ The application will be available at `http://localhost:8000`
 
 Colonia uses RabbitMQ for asynchronous repository scanning. When a project is created with a repository URL, the backend sends a message to RabbitMQ, which triggers the `repo-scan.py` consumer to fetch and process the `colonia.yaml` file from the repository.
 
-### Starting RabbitMQ
+### Starting RabbitMQ (if not using Docker Compose)
 
-Use Docker Compose to start RabbitMQ locally:
+Use Docker Compose to start only RabbitMQ:
 ```bash
-docker-compose up -d
+docker compose up -d rabbitmq
 ```
 
 RabbitMQ will be available at:
 - AMQP: `localhost:5672`
 - Management UI: `http://localhost:15672` (username: `colonia`, password: `colonia`)
 
-### Running the Repository Scanner
+### Running the Repository Scanner (if not using Docker Compose)
 
 Start the repository scanner consumer in a separate terminal:
 ```bash
@@ -140,6 +170,10 @@ stacks:
 ```
 
 If no `colonia.yaml` file exists in the repository, no resources will be created.
+
+### Triggering Manual Repository Scans
+
+You can manually trigger a repository scan for a project from the Projects page by clicking the refresh button (circular arrow icon) on any project card that has a repository URL configured. This is useful when you've updated your `colonia.yaml` file and want to sync the changes immediately.
 
 ## Project Structure
 

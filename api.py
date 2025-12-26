@@ -347,3 +347,73 @@ def delete_project_handler(request: Request, app, project_id: str) -> Response:
         )
         response.set_header("Content-Type", "application/json")
         return response
+
+
+def trigger_repo_scan_handler(request: Request, app, project_id: str) -> Response:
+    """Trigger a repository scan for a project."""
+    try:
+        # Validate project_id is an integer
+        try:
+            pid = int(project_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid project ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            project = session.get(Project, pid)
+
+            if not project:
+                response = Response(
+                    json.dumps({"error": "Project not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if project has a repository URL
+            if not project.repository_url:
+                response = Response(
+                    json.dumps({"error": "Project does not have a repository URL"}), 
+                    status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Send message to RabbitMQ for repo scan
+            try:
+                success = send_project_scan_message(
+                    project.id, project.name, project.repository_url
+                )
+                if not success:
+                    logger.warning(f"Failed to send RabbitMQ message for project {project.id}")
+                    response = Response(
+                        json.dumps({"error": "Failed to trigger repository scan"}), 
+                        status=500
+                    )
+                    response.set_header("Content-Type", "application/json")
+                    return response
+            except Exception as e:
+                logger.error(
+                    f"Exception while sending RabbitMQ message for project {project.id}: {e}", 
+                    exc_info=True
+                )
+                response = Response(
+                    json.dumps({"error": "Failed to trigger repository scan"}), 
+                    status=500
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            response = Response(
+                json.dumps({"message": "Repository scan triggered successfully"}), 
+                status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
