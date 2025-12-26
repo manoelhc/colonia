@@ -88,6 +88,59 @@ uv run python -m main
 
 The application will be available at `http://localhost:8000`
 
+## 6. RabbitMQ Integration
+
+Colonia uses RabbitMQ for asynchronous repository scanning. When a project is created with a repository URL, the backend sends a message to RabbitMQ, which triggers the `repo-scan.py` consumer to fetch and process the `colonia.yaml` file from the repository.
+
+### Starting RabbitMQ
+
+Use Docker Compose to start RabbitMQ locally:
+```bash
+docker-compose up -d
+```
+
+RabbitMQ will be available at:
+- AMQP: `localhost:5672`
+- Management UI: `http://localhost:15672` (username: `colonia`, password: `colonia`)
+
+### Running the Repository Scanner
+
+Start the repository scanner consumer in a separate terminal:
+```bash
+uv run python repo-scan.py
+```
+
+The scanner will:
+1. Listen for messages from RabbitMQ
+2. Fetch `colonia.yaml` from the repository
+3. Create/update/delete environments and stacks based on the YAML configuration
+
+### colonia.yaml Format
+
+The `colonia.yaml` file should be placed at the root of your repository and follows this format:
+
+```yaml
+environments:
+  - name: development
+    dir: example/environments/development
+  - name: staging
+    dir: example/environments/staging
+
+stacks:
+  - name: "VPC"
+    environments:
+      - development
+      - staging
+    stack: stacks/vpc
+  - name: "ECS"
+    environments:
+      - development
+      - staging
+    stack: stacks/ecs
+```
+
+If no `colonia.yaml` file exists in the repository, no resources will be created.
+
 ## Project Structure
 
 ```
@@ -95,10 +148,18 @@ colonia/
 ├── alembic/              # Database migrations
 │   └── versions/         # Migration files
 ├── models/               # SQLModel database models
+│   ├── project.py        # Project model
+│   ├── environment.py    # Environment model
+│   ├── stack.py          # Stack model
+│   └── stack_environment.py  # Stack-Environment relationship
 ├── static/               # Static assets (CSS, JS)
 ├── templates/            # HTML templates
-├── api.py               # API endpoint handlers
-├── database.py          # Database configuration
-├── main.py              # Application entry point
-└── alembic.ini          # Alembic configuration
+├── tests/                # Test files
+├── api.py                # API endpoint handlers
+├── database.py           # Database configuration
+├── main.py               # Application entry point
+├── rabbitmq.py           # RabbitMQ connection utilities
+├── repo-scan.py          # RabbitMQ consumer for repository scanning
+├── docker-compose.yml    # Docker Compose for RabbitMQ
+└── alembic.ini           # Alembic configuration
 ```
