@@ -6,4 +6,4 @@ WORKDIR /app
 RUN pip install --no-cache-dir uv
 
 # Start the consumer (dependencies installed via mounted volume)
-CMD ["uv", "run", "python", "repo-scan.py"]
+CMD ["sh", "-c", "cd /app && uv run python consumers/repo-scan.py"]

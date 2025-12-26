@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import pytest
 from datetime import datetime
 from models import Project, Environment, Stack, StackEnvironment
-from database import get_session
+from app.database import get_session
 
 
 def test_environment_creation():

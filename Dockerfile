@@ -9,4 +9,4 @@ RUN pip install --no-cache-dir uv
 EXPOSE 8000
 
 # Start the application (dependencies installed via mounted volume)
-CMD ["sh", "-c", "uv run alembic upgrade head && uv run python -m main"]
+CMD ["sh", "-c", "cd /app && uv run alembic upgrade head && uv run python -m app.main"]

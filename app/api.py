@@ -8,8 +8,8 @@ from typing import Optional
 from rupy import Request, Response
 from sqlmodel import select
 from models import Project
-from database import get_session
-from rabbitmq import send_project_scan_message
+from app.database import get_session
+from app.rabbitmq import send_project_scan_message
 
 # Get logger without configuring it at module level
 logger = logging.getLogger(__name__)

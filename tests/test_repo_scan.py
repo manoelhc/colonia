@@ -11,7 +11,7 @@ import yaml
 
 # Import after path is set
 import importlib.util
-spec = importlib.util.spec_from_file_location("repo_scan", os.path.join(os.path.dirname(__file__), '..', 'repo-scan.py'))
+spec = importlib.util.spec_from_file_location("repo_scan", os.path.join(os.path.dirname(__file__), '..', 'consumers', 'repo-scan.py'))
 repo_scan = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(repo_scan)
 

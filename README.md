@@ -84,21 +84,21 @@ uv run alembic downgrade <revision_id>
 
 ### Development Setup (Recommended)
 
-For development with hot-reload, start only RabbitMQ with Docker and run the app and consumer manually:
+For development with hot-reload, start PostgreSQL and RabbitMQ with Docker and run the app and consumer manually:
 
-**1. Start RabbitMQ:**
+**1. Start PostgreSQL and RabbitMQ:**
 ```bash
 docker compose up -d
 ```
 
 **2. Start the web application (in one terminal):**
 ```bash
-uv run python -m main
+uv run python -m app.main
 ```
 
 **3. Start the repository scanner (in another terminal):**
 ```bash
-uv run python repo-scan.py
+uv run python consumers/repo-scan.py
 ```
 
 The application will be available at `http://localhost:8000`
@@ -114,6 +114,7 @@ docker compose -f docker-compose.full.yml up -d
 ```
 
 This will start:
+- **PostgreSQL 18**: Database on port 5432
 - **RabbitMQ**: Message broker on ports 5672 (AMQP) and 15672 (Management UI)
 - **Colonia App**: Web application on port 8000
 - **Repo Scanner**: Consumer that processes repository scans
@@ -130,16 +131,32 @@ docker compose -f docker-compose.full.yml down
 
 **Note**: Source code is mounted as a volume for hot-reload functionality.
 
-## 6. RabbitMQ Integration
+## 6. Database and Services
 
-Colonia uses RabbitMQ for asynchronous repository scanning. When a project is created with a repository URL, the backend sends a message to RabbitMQ, which triggers the `repo-scan.py` consumer to fetch and process the `colonia.yaml` file from the repository.
+### PostgreSQL Database
+
+Colonia uses PostgreSQL 18 as its database. When running with Docker Compose, PostgreSQL will be available at:
+- Host: `localhost:5432`
+- Database: `colonia`
+- Username: `colonia`
+- Password: `colonia`
+
+### RabbitMQ Integration
+
+Colonia uses RabbitMQ for asynchronous repository scanning. When a project is created with a repository URL, the backend sends a message to RabbitMQ, which triggers the `consumers/repo-scan.py` consumer to fetch and process the `colonia.yaml` file from the repository.
 
 ### RabbitMQ Access
 
 RabbitMQ will be available at:
 - AMQP: `localhost:5672`
 - Management UI: `http://localhost:15672` (username: `colonia`, password: `colonia`)
-3. Create/update/delete environments and stacks based on the YAML configuration
+
+### Repository Scanner
+
+The repository scanner consumer:
+1. Listens for messages from RabbitMQ
+2. Fetches `colonia.yaml` from the repository
+3. Creates/updates/deletes environments and stacks based on the YAML configuration
 
 ### colonia.yaml Format
 
@@ -177,6 +194,13 @@ You can manually trigger a repository scan for a project from the Projects page 
 colonia/
 ├── alembic/              # Database migrations
 │   └── versions/         # Migration files
+├── app/                  # Main application
+│   ├── main.py           # Application entry point
+│   ├── api.py            # API endpoint handlers
+│   ├── database.py       # Database configuration
+│   └── rabbitmq.py       # RabbitMQ connection utilities
+├── consumers/            # Background workers
+│   └── repo-scan.py      # RabbitMQ consumer for repository scanning
 ├── models/               # SQLModel database models
 │   ├── project.py        # Project model
 │   ├── environment.py    # Environment model
@@ -185,11 +209,7 @@ colonia/
 ├── static/               # Static assets (CSS, JS)
 ├── templates/            # HTML templates
 ├── tests/                # Test files
-├── api.py                # API endpoint handlers
-├── database.py           # Database configuration
-├── main.py               # Application entry point
-├── rabbitmq.py           # RabbitMQ connection utilities
-├── repo-scan.py          # RabbitMQ consumer for repository scanning
-├── docker-compose.yml    # Docker Compose for RabbitMQ
+├── docker-compose.yml    # Docker Compose for development (PostgreSQL, RabbitMQ)
+├── docker-compose.full.yml # Docker Compose for full stack
 └── alembic.ini           # Alembic configuration
 ```

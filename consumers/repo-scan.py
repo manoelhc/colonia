@@ -10,8 +10,12 @@ import yaml
 import requests
 from typing import Optional, Dict, Any, List
 from sqlmodel import select, delete
+
+# Add parent directory to path to import from root
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from models import Project, Environment, Stack, StackEnvironment
-from database import get_session
+from app.database import get_session
 
 # Get logger without configuring it at module level
 logger = logging.getLogger(__name__)

@@ -18,10 +18,15 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+import os
 from sqlmodel import SQLModel
-from models import Project  # noqa: F401
+from models import Project, Environment, Stack, StackEnvironment  # noqa: F401
 
 target_metadata = SQLModel.metadata
+
+# Override the database URL with environment variable if set
+if os.getenv("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

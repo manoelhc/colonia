@@ -5,10 +5,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import pytest
 from unittest.mock import patch, MagicMock
-from rabbitmq import send_project_scan_message
+from app.rabbitmq import send_project_scan_message
 
 
-@patch('rabbitmq.get_rabbitmq_connection')
+@patch('app.rabbitmq.get_rabbitmq_connection')
 def test_send_project_scan_message_success(mock_connection):
     """Test successful message sending to RabbitMQ."""
     # Setup mocks
@@ -31,7 +31,7 @@ def test_send_project_scan_message_success(mock_connection):
     mock_conn.close.assert_called_once()
 
 
-@patch('rabbitmq.get_rabbitmq_connection')
+@patch('app.rabbitmq.get_rabbitmq_connection')
 def test_send_project_scan_message_failure(mock_connection):
     """Test handling of RabbitMQ connection failure."""
     # Setup mock to raise exception

@@ -1,6 +1,6 @@
 from rupy import Rupy, Response, Request
-from database import create_db_and_tables
-from api import (
+from app.database import create_db_and_tables
+from app.api import (
     create_project_handler,
     list_projects_handler,
     get_project_handler,

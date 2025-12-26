@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import pytest
 from unittest.mock import patch, MagicMock
 from models import Project
-from database import get_session
+from app.database import get_session
 
 
 def test_trigger_scan_for_project_with_repo_url():
@@ -23,10 +23,10 @@ def test_trigger_scan_for_project_with_repo_url():
         project_id = project.id
 
     # Mock the send_project_scan_message function
-    with patch('api.send_project_scan_message') as mock_send:
+    with patch('app.api.send_project_scan_message') as mock_send:
         mock_send.return_value = True
         
-        from api import trigger_repo_scan_handler
+        from app.api import trigger_repo_scan_handler
         from unittest.mock import MagicMock
         
         # Create mock request and app
@@ -54,7 +54,7 @@ def test_trigger_scan_for_project_without_repo_url():
         session.flush()
         project_id = project.id
 
-    from api import trigger_repo_scan_handler
+    from app.api import trigger_repo_scan_handler
     from unittest.mock import MagicMock
     
     # Create mock request and app
@@ -71,7 +71,7 @@ def test_trigger_scan_for_project_without_repo_url():
 
 def test_trigger_scan_for_nonexistent_project():
     """Test triggering scan for a non-existent project."""
-    from api import trigger_repo_scan_handler
+    from app.api import trigger_repo_scan_handler
     from unittest.mock import MagicMock
     
     # Create mock request and app
