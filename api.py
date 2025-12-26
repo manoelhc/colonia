@@ -8,6 +8,7 @@ from rupy import Request, Response
 from sqlmodel import select
 from models import Project
 from database import get_session
+from rabbitmq import send_project_scan_message
 
 
 def sanitize_string(value: str, max_length: Optional[int] = None) -> str:
@@ -115,6 +116,10 @@ def create_project_handler(request: Request, app) -> Response:
             session.add(project)
             session.flush()
             session.refresh(project)
+
+            # Send message to RabbitMQ for repo scan
+            if repository_url:
+                send_project_scan_message(project.id, project.name, project.repository_url)
 
             # Return created project
             response_body = json.dumps(
