@@ -470,6 +470,29 @@ def get_stacks_grouped_handler(request: Request, app) -> Response:
                     .order_by(Environment.name)
                 ).all()
                 
+                # Fetch all stacks for this project
+                project_stacks = session.exec(
+                    select(Stack)
+                    .where(Stack.project_id == project.id)
+                    .order_by(Stack.name)
+                ).all()
+                
+                # Fetch all stack-environment relationships for this project
+                stack_env_relationships = session.exec(
+                    select(StackEnvironment)
+                    .where(StackEnvironment.stack_id.in_([s.id for s in project_stacks]))
+                ).all()
+                
+                # Create a mapping of environment_id to stack_ids
+                env_to_stacks = {}
+                for rel in stack_env_relationships:
+                    if rel.environment_id not in env_to_stacks:
+                        env_to_stacks[rel.environment_id] = []
+                    env_to_stacks[rel.environment_id].append(rel.stack_id)
+                
+                # Create a mapping of stack_id to stack object
+                stacks_by_id = {stack.id: stack for stack in project_stacks}
+                
                 project_data = {
                     "id": project.id,
                     "name": project.name,
@@ -477,14 +500,9 @@ def get_stacks_grouped_handler(request: Request, app) -> Response:
                 }
                 
                 for environment in environments:
-                    # Fetch stacks for this environment
-                    stacks = session.exec(
-                        select(Stack)
-                        .join(StackEnvironment, Stack.id == StackEnvironment.stack_id)
-                        .where(StackEnvironment.environment_id == environment.id)
-                        .where(Stack.project_id == project.id)
-                        .order_by(Stack.name)
-                    ).all()
+                    # Get stacks for this environment
+                    stack_ids = env_to_stacks.get(environment.id, [])
+                    stacks = [stacks_by_id[sid] for sid in stack_ids if sid in stacks_by_id]
                     
                     stacks_data = [
                         {
@@ -497,14 +515,15 @@ def get_stacks_grouped_handler(request: Request, app) -> Response:
                         for stack in stacks
                     ]
                     
-                    project_data["environments"].append({
-                        "id": environment.id,
-                        "name": environment.name,
-                        "stacks": stacks_data
-                    })
+                    if stacks_data:
+                        project_data["environments"].append({
+                            "id": environment.id,
+                            "name": environment.name,
+                            "stacks": stacks_data
+                        })
                 
                 # Only add project if it has environments with stacks
-                if any(env["stacks"] for env in project_data["environments"]):
+                if project_data["environments"]:
                     result.append(project_data)
 
             response = Response(json.dumps({"projects": result}), status=200)

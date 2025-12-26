@@ -74,7 +74,7 @@
                 `;
 
                 environment.stacks.forEach(stack => {
-                    const hasDependencies = stack.depends_on && stack.depends_on.length > 0;
+                    const hasDependencies = Array.isArray(stack.depends_on) && stack.depends_on.length > 0;
                     const dependenciesText = hasDependencies 
                         ? stack.depends_on.join(', ')
                         : '';

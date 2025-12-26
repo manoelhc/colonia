@@ -721,7 +721,8 @@ html, body {
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 0.75rem 1rem;
-    min-width: 200px;
+    min-width: min(200px, 100%);
+    flex: 1 1 auto;
     transition: all 0.2s;
 }
 
