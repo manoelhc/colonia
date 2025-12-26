@@ -7,6 +7,7 @@ from app.api import (
     update_project_handler,
     delete_project_handler,
     trigger_repo_scan_handler,
+    get_stats_handler,
 )
 
 app = Rupy()
@@ -105,6 +106,12 @@ def api_project(request: Request, project_id: str) -> Response:
 def api_project_scan(request: Request, project_id: str) -> Response:
     """Trigger repository scan for a project."""
     return trigger_repo_scan_handler(request, app, project_id)
+
+
+@app.route("/api/stats", methods=["GET"])
+def api_stats(request: Request) -> Response:
+    """Get dashboard statistics."""
+    return get_stats_handler(request, app)
 
 
 def main():

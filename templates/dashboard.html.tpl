@@ -258,5 +258,6 @@
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/dashboard.js"></script>
 </body>
 </html>

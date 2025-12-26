@@ -6,8 +6,8 @@ import logging
 from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
-from sqlmodel import select
-from models import Project
+from sqlmodel import select, func
+from models import Project, Environment, Stack
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
 
@@ -412,6 +412,40 @@ def trigger_repo_scan_handler(request: Request, app, project_id: str) -> Respons
             return response
 
     except Exception as e:
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_stats_handler(request: Request, app) -> Response:
+    """Get statistics for dashboard."""
+    try:
+        with get_session() as session:
+            # Count projects
+            projects_count = session.exec(select(func.count(Project.id))).one()
+            
+            # Count stacks
+            stacks_count = session.exec(select(func.count(Stack.id))).one()
+            
+            # Count environments
+            environments_count = session.exec(select(func.count(Environment.id))).one()
+
+            stats_data = {
+                "projects": projects_count,
+                "stacks": stacks_count,
+                "environments": environments_count,
+                "runs": 0,  # Placeholder for future implementation
+                "resources": 0,  # Placeholder for future implementation
+            }
+
+            response = Response(json.dumps(stats_data), status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error fetching stats: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )
