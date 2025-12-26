@@ -32,23 +32,23 @@
         // Get all stat cards
         const statCards = document.querySelectorAll('.stat-card');
         
-        // Map of stat types to their values
+        // Map of i18n keys to their values
         const statValues = {
-            'Projects': stats.projects,
-            'Stacks': stats.stacks,
-            'Environments': stats.environments,
-            'Resources': stats.resources
+            'stats.projects': stats.projects,
+            'stats.stacks': stats.stacks,
+            'stats.environments': stats.environments,
+            'stats.resources': stats.resources
         };
 
         // Update each stat card
         statCards.forEach(card => {
-            const statHeader = card.querySelector('.stat-header span');
+            const statHeader = card.querySelector('.stat-header span[data-i18n]');
             if (statHeader) {
-                const statName = statHeader.textContent;
+                const i18nKey = statHeader.getAttribute('data-i18n');
                 const valueElement = card.querySelector('.stat-value');
                 
-                if (valueElement && statValues.hasOwnProperty(statName)) {
-                    valueElement.textContent = statValues[statName];
+                if (valueElement && statValues.hasOwnProperty(i18nKey)) {
+                    valueElement.textContent = statValues[i18nKey];
                 }
             }
         });
