@@ -1,0 +1,17 @@
+environments:
+  - name: development
+    dir: example/environments/development
+  - name: staging
+    dir: example/environments/staging
+
+stacks:
+  - name: "VPC"
+    environments:
+      - development
+      - staging
+    stack: stacks/vpc
+  - name: "ECS"
+    environments:
+      - development
+      - staging
+    stack: stacks/ecs
