@@ -13,11 +13,7 @@ from sqlmodel import select, delete
 from models import Project, Environment, Stack, StackEnvironment
 from database import get_session
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Get logger without configuring it at module level
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +29,8 @@ def fetch_colonia_yaml(repository_url: str) -> Optional[Dict[str, Any]]:
 
     try:
         # Convert GitHub URL to raw content URL
-        if "github.com" in repository_url:
+        # Ensure github.com is the actual domain
+        if repository_url.startswith("https://github.com/") or repository_url.startswith("http://github.com/"):
             # Extract user and repo from URL
             # Handle various formats: https://github.com/user/repo or https://github.com/user/repo.git
             parts = repository_url.rstrip('/').rstrip('.git').split('github.com/')
@@ -234,14 +231,24 @@ def callback(ch, method, properties, body):
         ch.basic_ack(delivery_tag=method.delivery_tag)
         logger.info(f"Completed processing for project {project_id}")
 
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in message: {e}", exc_info=True)
+        # Reject malformed messages without requeue
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
     except Exception as e:
         logger.error(f"Error processing message: {e}", exc_info=True)
-        # Acknowledge to prevent redelivery of malformed messages
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        # Reject message without requeue for permanent errors
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
 
 def main():
     """Main function to start the RabbitMQ consumer."""
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
     rabbitmq_host = os.getenv("RABBITMQ_HOST", "localhost")
     rabbitmq_port = int(os.getenv("RABBITMQ_PORT", "5672"))
     rabbitmq_user = os.getenv("RABBITMQ_USER", "colonia")

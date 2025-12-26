@@ -11,8 +11,7 @@ from models import Project
 from database import get_session
 from rabbitmq import send_project_scan_message
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Get logger without configuring it at module level
 logger = logging.getLogger(__name__)
 
 

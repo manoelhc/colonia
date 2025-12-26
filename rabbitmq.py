@@ -6,8 +6,7 @@ import logging
 import pika
 from typing import Optional
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Get logger without configuring it at module level
 logger = logging.getLogger(__name__)
 
 
