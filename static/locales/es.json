@@ -45,7 +45,8 @@
     "title": "Entornos",
     "description": "Gestiona entornos de implementación para tus proyectos. Define y organiza diferentes etapas como desarrollo, preparación y producción.",
     "list": "Lista de Entornos",
-    "no_environments": "No se encontraron entornos. Crea tu primer entorno para organizar implementaciones."
+    "no_environments": "No se encontraron entornos. Crea tu primer entorno para organizar implementaciones.",
+    "loading": "Cargando entornos..."
   },
   "contexts": {
     "title": "Contextos",
