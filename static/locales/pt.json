@@ -45,7 +45,8 @@
     "title": "Ambientes",
     "description": "Gerencie ambientes de implantação para seus projetos. Defina e organize diferentes estágios como desenvolvimento, homologação e produção.",
     "list": "Lista de Ambientes",
-    "no_environments": "Nenhum ambiente encontrado. Crie seu primeiro ambiente para organizar implantações."
+    "no_environments": "Nenhum ambiente encontrado. Crie seu primeiro ambiente para organizar implantações.",
+    "loading": "Carregando ambientes..."
   },
   "contexts": {
     "title": "Contextos",

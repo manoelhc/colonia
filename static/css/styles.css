@@ -783,3 +783,107 @@ html, body {
 .dark .stack-card:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
+
+/* Environment Cards */
+.project-section {
+    margin-bottom: 2rem;
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.project-header-content h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+}
+
+.project-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.project-repo-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent-blue);
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.project-repo-link:hover {
+    background-color: var(--bg-secondary);
+}
+
+.environments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.environment-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+.environment-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-color: var(--accent-blue);
+}
+
+.environment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.environment-icon {
+    flex-shrink: 0;
+}
+
+.environment-icon svg {
+    width: 32px;
+    height: 32px;
+    color: var(--accent-blue);
+}
+
+.environment-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.environment-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.environment-directory {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.environment-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.5rem;
+}
+
+.dark .environment-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}

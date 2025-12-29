@@ -9,6 +9,7 @@ from app.api import (
     trigger_repo_scan_handler,
     get_stats_handler,
     get_stacks_grouped_handler,
+    get_environments_grouped_handler,
 )
 
 app = Rupy()
@@ -119,6 +120,12 @@ def api_stats(request: Request) -> Response:
 def api_stacks_grouped(request: Request) -> Response:
     """Get stacks grouped by project and environment."""
     return get_stacks_grouped_handler(request, app)
+
+
+@app.route("/api/environments/grouped", methods=["GET"])
+def api_environments_grouped(request: Request) -> Response:
+    """Get environments grouped by project."""
+    return get_environments_grouped_handler(request, app)
 
 
 def main():
