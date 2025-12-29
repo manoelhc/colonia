@@ -156,8 +156,10 @@ def process_colonia_yaml(project_id: int, colonia_config: Optional[Dict[str, Any
 
         for stack_config in stacks_config:
             stack_name = stack_config.get('name')
+            stack_id_str = stack_config.get('id')
             stack_path = stack_config.get('stack')
             stack_envs = stack_config.get('environments', [])
+            depends_on = stack_config.get('depends_on', [])
             
             if not stack_name or not stack_path:
                 logger.warning(f"Skipping invalid stack config: {stack_config}")
@@ -168,7 +170,9 @@ def process_colonia_yaml(project_id: int, colonia_config: Optional[Dict[str, Any
             if stack_name in existing_stacks_map:
                 # Update existing stack
                 stack = existing_stacks_map[stack_name]
+                stack.stack_id = stack_id_str
                 stack.stack_path = stack_path
+                stack.depends_on = depends_on if depends_on else None
                 session.add(stack)
                 logger.info(f"Updated stack: {stack_name}")
             else:
@@ -176,7 +180,9 @@ def process_colonia_yaml(project_id: int, colonia_config: Optional[Dict[str, Any
                 stack = Stack(
                     project_id=project_id,
                     name=stack_name,
-                    stack_path=stack_path
+                    stack_id=stack_id_str,
+                    stack_path=stack_path,
+                    depends_on=depends_on if depends_on else None
                 )
                 session.add(stack)
                 session.flush()
