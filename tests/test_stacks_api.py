@@ -33,15 +33,20 @@ def test_get_stacks_grouped_handler_success():
         mock_stack.stack_path = "stacks/vpc"
         mock_stack.depends_on = None
         
+        mock_stack_env = MagicMock()
+        mock_stack_env.stack_id = 1
+        mock_stack_env.environment_id = 1
+        
         # Create a mock session context manager
         mock_session = MagicMock()
         mock_get_session.return_value.__enter__.return_value = mock_session
         
-        # Mock the exec method to return mock data
+        # Mock the exec method to return mock data - now includes 4 queries per project
         mock_session.exec.return_value.all.side_effect = [
-            [mock_project],  # projects query
-            [mock_env],      # environments query for first project
-            [mock_stack]     # stacks query for first environment
+            [mock_project],     # projects query
+            [mock_env],         # environments query for first project
+            [mock_stack],       # stacks query for first project
+            [mock_stack_env]    # stack-environment relationships query
         ]
         
         # Call the handler
