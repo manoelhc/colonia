@@ -10,6 +10,20 @@ from app.api import (
     get_stats_handler,
     get_stacks_grouped_handler,
     get_environments_grouped_handler,
+    create_user_handler,
+    list_users_handler,
+    get_user_handler,
+    update_user_handler,
+    delete_user_handler,
+    create_team_handler,
+    list_teams_handler,
+    get_team_handler,
+    update_team_handler,
+    delete_team_handler,
+    add_team_member_handler,
+    remove_team_member_handler,
+    set_team_permission_handler,
+    delete_team_permission_handler,
 )
 
 app = Rupy()
@@ -126,6 +140,72 @@ def api_stacks_grouped(request: Request) -> Response:
 def api_environments_grouped(request: Request) -> Response:
     """Get environments grouped by project."""
     return get_environments_grouped_handler(request, app)
+
+
+# User API Routes
+@app.route("/api/users", methods=["GET", "POST"])
+def api_users(request: Request) -> Response:
+    """Handle users API endpoint."""
+    if request.method == "POST":
+        return create_user_handler(request, app)
+    else:  # GET
+        return list_users_handler(request, app)
+
+
+@app.route("/api/users/<user_id>", methods=["GET", "PUT", "DELETE"])
+def api_user(request: Request, user_id: str) -> Response:
+    """Handle single user API endpoint."""
+    if request.method == "GET":
+        return get_user_handler(request, app, user_id)
+    elif request.method == "PUT":
+        return update_user_handler(request, app, user_id)
+    else:  # DELETE
+        return delete_user_handler(request, app, user_id)
+
+
+# Team API Routes
+@app.route("/api/teams", methods=["GET", "POST"])
+def api_teams(request: Request) -> Response:
+    """Handle teams API endpoint."""
+    if request.method == "POST":
+        return create_team_handler(request, app)
+    else:  # GET
+        return list_teams_handler(request, app)
+
+
+@app.route("/api/teams/<team_id>", methods=["GET", "PUT", "DELETE"])
+def api_team(request: Request, team_id: str) -> Response:
+    """Handle single team API endpoint."""
+    if request.method == "GET":
+        return get_team_handler(request, app, team_id)
+    elif request.method == "PUT":
+        return update_team_handler(request, app, team_id)
+    else:  # DELETE
+        return delete_team_handler(request, app, team_id)
+
+
+@app.route("/api/teams/<team_id>/members", methods=["POST"])
+def api_team_add_member(request: Request, team_id: str) -> Response:
+    """Add a member to a team."""
+    return add_team_member_handler(request, app, team_id)
+
+
+@app.route("/api/teams/<team_id>/members/<member_id>", methods=["DELETE"])
+def api_team_remove_member(request: Request, team_id: str, member_id: str) -> Response:
+    """Remove a member from a team."""
+    return remove_team_member_handler(request, app, team_id, member_id)
+
+
+@app.route("/api/teams/<team_id>/permissions", methods=["POST"])
+def api_team_set_permission(request: Request, team_id: str) -> Response:
+    """Set or update a team permission."""
+    return set_team_permission_handler(request, app, team_id)
+
+
+@app.route("/api/teams/<team_id>/permissions/<permission_id>", methods=["DELETE"])
+def api_team_delete_permission(request: Request, team_id: str, permission_id: str) -> Response:
+    """Delete a team permission."""
+    return delete_team_permission_handler(request, app, team_id, permission_id)
 
 
 def main():
