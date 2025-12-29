@@ -179,7 +179,15 @@
                 <div class="content-wrapper">
                     <!-- Users Overview Card -->
                     <div class="card">
-                        <h3 data-i18n="users.title">Users</h3>
+                        <div class="card-header">
+                            <h3 data-i18n="users.title">Users</h3>
+                            <button id="addUserBtn" class="btn-primary">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span data-i18n="users.add">Add User</span>
+                            </button>
+                        </div>
                         <p data-i18n="users.description">Manage user accounts and permissions. Control access to your Colonia instance and projects.</p>
                     </div>
 
@@ -188,8 +196,8 @@
                         <div class="activity-header">
                             <h4 data-i18n="users.list">User List</h4>
                         </div>
-                        <div class="activity-content">
-                            <p data-i18n="users.no_users">No users found. Invite users to collaborate on your projects.</p>
+                        <div id="usersList" class="users-grid">
+                            <p data-i18n="users.loading">Loading users...</p>
                         </div>
                     </div>
                 </div>
@@ -212,8 +220,37 @@
         </div>
     </div>
 
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create User</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required minlength="3" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required maxlength="255">
+                </div>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required maxlength="255">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/users.js"></script>
 </body>
 </html>
