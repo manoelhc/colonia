@@ -110,7 +110,7 @@
         editingUserId = null;
         document.getElementById('modalTitle').textContent = 'Create User';
         document.getElementById('userForm').reset();
-        document.getElementById('userModal').classList.add('active');
+        document.getElementById('userModal').classList.add('show');
     }
 
     // Open edit modal
@@ -123,12 +123,12 @@
         document.getElementById('username').value = user.username;
         document.getElementById('email').value = user.email;
         document.getElementById('name').value = user.name;
-        document.getElementById('userModal').classList.add('active');
+        document.getElementById('userModal').classList.add('show');
     }
 
     // Close modal
     function closeModal() {
-        document.getElementById('userModal').classList.remove('active');
+        document.getElementById('userModal').classList.remove('show');
         editingUserId = null;
     }
 

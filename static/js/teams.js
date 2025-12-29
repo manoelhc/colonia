@@ -202,7 +202,7 @@
         editingTeamId = null;
         document.getElementById('modalTitle').textContent = 'Create Team';
         document.getElementById('teamForm').reset();
-        document.getElementById('teamModal').classList.add('active');
+        document.getElementById('teamModal').classList.add('show');
     }
 
     // Open edit modal
@@ -214,14 +214,14 @@
         document.getElementById('modalTitle').textContent = 'Edit Team';
         document.getElementById('teamName').value = team.name;
         document.getElementById('teamDescription').value = team.description || '';
-        document.getElementById('teamModal').classList.add('active');
+        document.getElementById('teamModal').classList.add('show');
     }
 
     // Close all modals
     function closeModals() {
-        document.getElementById('teamModal').classList.remove('active');
-        document.getElementById('membersModal').classList.remove('active');
-        document.getElementById('permissionsModal').classList.remove('active');
+        document.getElementById('teamModal').classList.remove('show');
+        document.getElementById('membersModal').classList.remove('show');
+        document.getElementById('permissionsModal').classList.remove('show');
         editingTeamId = null;
         currentTeamId = null;
     }
@@ -305,7 +305,7 @@
         document.getElementById('membersModalTitle').textContent = `Manage Members - ${team.name}`;
         renderMembers(team);
         renderUserSelector();
-        document.getElementById('membersModal').classList.add('active');
+        document.getElementById('membersModal').classList.add('show');
     }
 
     // Render members list
@@ -424,7 +424,7 @@
         document.getElementById('permissionsModalTitle').textContent = `Manage Permissions - ${team.name}`;
         renderPermissions(team);
         renderResourceSelectors();
-        document.getElementById('permissionsModal').classList.add('active');
+        document.getElementById('permissionsModal').classList.add('show');
     }
 
     // Render permissions list
