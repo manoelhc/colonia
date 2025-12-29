@@ -188,8 +188,8 @@
                         <div class="activity-header">
                             <h4 data-i18n="environments.list">Environment List</h4>
                         </div>
-                        <div class="activity-content">
-                            <p data-i18n="environments.no_environments">No environments found. Create your first environment to organize deployments.</p>
+                        <div class="activity-content" id="environmentsList">
+                            <p class="loading" data-i18n="environments.loading">Loading environments...</p>
                         </div>
                     </div>
                 </div>
@@ -215,5 +215,6 @@
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/environments.js"></script>
 </body>
 </html>

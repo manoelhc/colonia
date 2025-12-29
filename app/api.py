@@ -537,3 +537,53 @@ def get_stacks_grouped_handler(request: Request, app) -> Response:
         )
         response.set_header("Content-Type", "application/json")
         return response
+
+
+def get_environments_grouped_handler(request: Request, app) -> Response:
+    """Get environments grouped by project."""
+    try:
+        with get_session() as session:
+            # Fetch all projects
+            projects = session.exec(select(Project).order_by(Project.name)).all()
+            
+            result = []
+            
+            for project in projects:
+                # Fetch environments for this project
+                environments = session.exec(
+                    select(Environment)
+                    .where(Environment.project_id == project.id)
+                    .order_by(Environment.name)
+                ).all()
+                
+                if environments:
+                    environments_data = [
+                        {
+                            "id": environment.id,
+                            "name": environment.name,
+                            "directory": environment.directory,
+                            "created_at": environment.created_at.isoformat(),
+                            "updated_at": environment.updated_at.isoformat(),
+                        }
+                        for environment in environments
+                    ]
+                    
+                    result.append({
+                        "id": project.id,
+                        "name": project.name,
+                        "description": project.description,
+                        "repository_url": project.repository_url,
+                        "environments": environments_data
+                    })
+
+            response = Response(json.dumps({"projects": result}), status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error fetching grouped environments: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response

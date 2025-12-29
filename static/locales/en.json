@@ -45,7 +45,8 @@
     "title": "Environments",
     "description": "Manage deployment environments for your projects. Define and organize different stages like development, staging, and production.",
     "list": "Environment List",
-    "no_environments": "No environments found. Create your first environment to organize deployments."
+    "no_environments": "No environments found. Create your first environment to organize deployments.",
+    "loading": "Loading environments..."
   },
   "contexts": {
     "title": "Contexts",
