@@ -1044,6 +1044,10 @@ def list_teams_handler(request: Request, app) -> Response:
                         "can_view": perm.can_view,
                         "can_plan": perm.can_plan,
                         "can_apply": perm.can_apply,
+                        "all_stacks": perm.all_stacks,
+                        "can_view_dependencies": perm.can_view_dependencies,
+                        "can_plan_dependencies": perm.can_plan_dependencies,
+                        "can_apply_dependencies": perm.can_apply_dependencies,
                     }
                     for perm in permissions
                 ]
@@ -1124,6 +1128,10 @@ def get_team_handler(request: Request, app, team_id: str) -> Response:
                     "can_view": perm.can_view,
                     "can_plan": perm.can_plan,
                     "can_apply": perm.can_apply,
+                    "all_stacks": perm.all_stacks,
+                    "can_view_dependencies": perm.can_view_dependencies,
+                    "can_plan_dependencies": perm.can_plan_dependencies,
+                    "can_apply_dependencies": perm.can_apply_dependencies,
                 }
                 for perm in permissions
             ]
@@ -1468,6 +1476,10 @@ def set_team_permission_handler(request: Request, app, team_id: str) -> Response
         can_view = data.get("can_view", True)
         can_plan = data.get("can_plan", False)
         can_apply = data.get("can_apply", False)
+        all_stacks = data.get("all_stacks", False)
+        can_view_dependencies = data.get("can_view_dependencies", False)
+        can_plan_dependencies = data.get("can_plan_dependencies", False)
+        can_apply_dependencies = data.get("can_apply_dependencies", False)
 
         with get_session() as session:
             # Check if team exists
@@ -1492,6 +1504,10 @@ def set_team_permission_handler(request: Request, app, team_id: str) -> Response
                 existing_perm.can_view = can_view
                 existing_perm.can_plan = can_plan
                 existing_perm.can_apply = can_apply
+                existing_perm.all_stacks = all_stacks
+                existing_perm.can_view_dependencies = can_view_dependencies
+                existing_perm.can_plan_dependencies = can_plan_dependencies
+                existing_perm.can_apply_dependencies = can_apply_dependencies
                 existing_perm.updated_at = datetime.utcnow()
                 session.add(existing_perm)
                 session.flush()
@@ -1505,7 +1521,11 @@ def set_team_permission_handler(request: Request, app, team_id: str) -> Response
                     resource_id=resource_id,
                     can_view=can_view,
                     can_plan=can_plan,
-                    can_apply=can_apply
+                    can_apply=can_apply,
+                    all_stacks=all_stacks,
+                    can_view_dependencies=can_view_dependencies,
+                    can_plan_dependencies=can_plan_dependencies,
+                    can_apply_dependencies=can_apply_dependencies
                 )
                 session.add(permission)
                 session.flush()
@@ -1519,6 +1539,10 @@ def set_team_permission_handler(request: Request, app, team_id: str) -> Response
                 "can_view": permission.can_view,
                 "can_plan": permission.can_plan,
                 "can_apply": permission.can_apply,
+                "all_stacks": permission.all_stacks,
+                "can_view_dependencies": permission.can_view_dependencies,
+                "can_plan_dependencies": permission.can_plan_dependencies,
+                "can_apply_dependencies": permission.can_apply_dependencies,
                 "created_at": permission.created_at.isoformat(),
                 "updated_at": permission.updated_at.isoformat(),
             })

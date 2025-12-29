@@ -301,11 +301,29 @@
                             <option value="stack">Stack</option>
                         </select>
                     </div>
+                    <div id="projectSelectGroup" class="form-group" style="display:none;">
+                        <label for="projectSelect">Project (filter stacks)</label>
+                        <select id="projectSelect" name="projectSelect">
+                            <option value="">Select a project</option>
+                        </select>
+                    </div>
+                    <div id="environmentSelectGroup" class="form-group" style="display:none;">
+                        <label for="environmentSelect">Environment (filter stacks)</label>
+                        <select id="environmentSelect" name="environmentSelect">
+                            <option value="">Select an environment</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="resourceId">Resource</label>
                         <select id="resourceId" name="resourceId" required>
                             <option value="">Select a resource</option>
                         </select>
+                    </div>
+                    <div id="allStacksGroup" class="form-group" style="display:none;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="allStacks" name="allStacks">
+                            <span>Apply to All Stacks</span>
+                        </label>
                     </div>
                     <div class="form-group">
                         <label class="checkbox-label">
@@ -323,6 +341,23 @@
                         <label class="checkbox-label">
                             <input type="checkbox" id="canApply" name="canApply">
                             <span>Can Apply</span>
+                        </label>
+                    </div>
+                    <div id="dependencyPermissionsGroup" class="form-group" style="display:none;">
+                        <hr>
+                        <h5>Dependency Permissions</h5>
+                        <p style="font-size: 0.875rem; color: #6b7280;">Permissions for stacks that depend on the selected stack</p>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canViewDependencies" name="canViewDependencies">
+                            <span>Can View Dependencies</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canPlanDependencies" name="canPlanDependencies">
+                            <span>Can Plan Dependencies</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canApplyDependencies" name="canApplyDependencies">
+                            <span>Can Apply Dependencies</span>
                         </label>
                     </div>
                     <div class="modal-footer">

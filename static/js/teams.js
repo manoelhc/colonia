@@ -450,14 +450,21 @@
                 if (stack) resourceName = `Stack: ${stack.name} (${stack.projectName}/${stack.envName})`;
             }
 
+            const flags = [];
+            if (perm.all_stacks) flags.push('<span class="badge">All Stacks</span>');
+            if (perm.can_view) flags.push('<span class="badge badge-success">View</span>');
+            if (perm.can_plan) flags.push('<span class="badge badge-info">Plan</span>');
+            if (perm.can_apply) flags.push('<span class="badge badge-warning">Apply</span>');
+            if (perm.can_view_dependencies) flags.push('<span class="badge badge-success">View Deps</span>');
+            if (perm.can_plan_dependencies) flags.push('<span class="badge badge-info">Plan Deps</span>');
+            if (perm.can_apply_dependencies) flags.push('<span class="badge badge-warning">Apply Deps</span>');
+
             return `
                 <div class="permission-item">
                     <div class="permission-info">
                         <strong>${escapeHtml(resourceName)}</strong>
                         <div class="permission-flags">
-                            ${perm.can_view ? '<span class="badge badge-success">View</span>' : ''}
-                            ${perm.can_plan ? '<span class="badge badge-info">Plan</span>' : ''}
-                            ${perm.can_apply ? '<span class="badge badge-warning">Apply</span>' : ''}
+                            ${flags.join(' ')}
                         </div>
                     </div>
                     <button class="btn-icon" onclick="teamsModule.removePermission(${team.id}, ${perm.id})" title="Remove">
@@ -475,15 +482,77 @@
     // Render resource selectors
     function renderResourceSelectors() {
         const typeSelect = document.getElementById('resourceType');
+        const projectSelect = document.getElementById('projectSelect');
+        const environmentSelect = document.getElementById('environmentSelect');
         const resourceSelect = document.getElementById('resourceId');
         
         if (!typeSelect || !resourceSelect) return;
 
-        typeSelect.addEventListener('change', function() {
-            updateResourceOptions(this.value);
+        // Remove old listeners to prevent duplicates
+        const newTypeSelect = typeSelect.cloneNode(true);
+        typeSelect.parentNode.replaceChild(newTypeSelect, typeSelect);
+        
+        newTypeSelect.addEventListener('change', function() {
+            handleResourceTypeChange(this.value);
         });
 
-        updateResourceOptions(typeSelect.value);
+        if (projectSelect) {
+            const newProjectSelect = projectSelect.cloneNode(true);
+            projectSelect.parentNode.replaceChild(newProjectSelect, projectSelect);
+            newProjectSelect.addEventListener('change', updateStackOptions);
+        }
+
+        if (environmentSelect) {
+            const newEnvironmentSelect = environmentSelect.cloneNode(true);
+            environmentSelect.parentNode.replaceChild(newEnvironmentSelect, environmentSelect);
+            newEnvironmentSelect.addEventListener('change', updateStackOptions);
+        }
+
+        handleResourceTypeChange(newTypeSelect.value);
+    }
+
+    // Handle resource type change
+    function handleResourceTypeChange(type) {
+        const projectSelectGroup = document.getElementById('projectSelectGroup');
+        const environmentSelectGroup = document.getElementById('environmentSelectGroup');
+        const allStacksGroup = document.getElementById('allStacksGroup');
+        const dependencyPermissionsGroup = document.getElementById('dependencyPermissionsGroup');
+        
+        // Show/hide filter selects and options based on type
+        if (type === 'stack') {
+            projectSelectGroup.style.display = 'block';
+            environmentSelectGroup.style.display = 'block';
+            allStacksGroup.style.display = 'block';
+            dependencyPermissionsGroup.style.display = 'block';
+            populateFilterSelects();
+        } else {
+            projectSelectGroup.style.display = 'none';
+            environmentSelectGroup.style.display = 'none';
+            allStacksGroup.style.display = 'none';
+            dependencyPermissionsGroup.style.display = 'none';
+        }
+        
+        updateResourceOptions(type);
+    }
+
+    // Populate project and environment filter selects
+    function populateFilterSelects() {
+        const projectSelect = document.getElementById('projectSelect');
+        const environmentSelect = document.getElementById('environmentSelect');
+        
+        if (projectSelect) {
+            const projectOptions = '<option value="">All projects</option>' + projects.map(p => 
+                `<option value="${p.id}">${escapeHtml(p.name)}</option>`
+            ).join('');
+            projectSelect.innerHTML = projectOptions;
+        }
+        
+        if (environmentSelect) {
+            const envOptions = '<option value="">All environments</option>' + environments.map(e => 
+                `<option value="${e.id}">${escapeHtml(e.name)} (${escapeHtml(e.projectName)})</option>`
+            ).join('');
+            environmentSelect.innerHTML = envOptions;
+        }
     }
 
     // Update resource options based on type
@@ -502,11 +571,46 @@
                 `<option value="${e.id}">${escapeHtml(e.name)} (${escapeHtml(e.projectName)})</option>`
             ).join('');
         } else if (type === 'stack') {
-            options += stacks.map(s => 
-                `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.projectName)}/${escapeHtml(s.envName)})</option>`
-            ).join('');
+            updateStackOptions();
+            return;
         }
 
+        resourceSelect.innerHTML = options;
+    }
+
+    // Update stack options based on selected project/environment filters
+    function updateStackOptions() {
+        const resourceSelect = document.getElementById('resourceId');
+        const projectSelect = document.getElementById('projectSelect');
+        const environmentSelect = document.getElementById('environmentSelect');
+        
+        if (!resourceSelect) return;
+        
+        const selectedProject = projectSelect ? projectSelect.value : '';
+        const selectedEnvironment = environmentSelect ? environmentSelect.value : '';
+        
+        let filteredStacks = stacks;
+        
+        // Filter by project if selected
+        if (selectedProject) {
+            filteredStacks = filteredStacks.filter(s => {
+                const project = projects.find(p => p.name === s.projectName);
+                return project && project.id === parseInt(selectedProject);
+            });
+        }
+        
+        // Filter by environment if selected
+        if (selectedEnvironment) {
+            filteredStacks = filteredStacks.filter(s => {
+                const env = environments.find(e => e.name === s.envName);
+                return env && env.id === parseInt(selectedEnvironment);
+            });
+        }
+        
+        const options = '<option value="">Select a stack</option>' + filteredStacks.map(s => 
+            `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.projectName)}/${escapeHtml(s.envName)})</option>`
+        ).join('');
+        
         resourceSelect.innerHTML = options;
     }
 
@@ -519,6 +623,10 @@
         const canView = document.getElementById('canView').checked;
         const canPlan = document.getElementById('canPlan').checked;
         const canApply = document.getElementById('canApply').checked;
+        const allStacks = document.getElementById('allStacks') ? document.getElementById('allStacks').checked : false;
+        const canViewDependencies = document.getElementById('canViewDependencies') ? document.getElementById('canViewDependencies').checked : false;
+        const canPlanDependencies = document.getElementById('canPlanDependencies') ? document.getElementById('canPlanDependencies').checked : false;
+        const canApplyDependencies = document.getElementById('canApplyDependencies') ? document.getElementById('canApplyDependencies').checked : false;
 
         if (!resourceId) {
             showNotification('Please select a resource', 'error');
@@ -536,7 +644,11 @@
                     resource_id: parseInt(resourceId),
                     can_view: canView,
                     can_plan: canPlan,
-                    can_apply: canApply
+                    can_apply: canApply,
+                    all_stacks: allStacks,
+                    can_view_dependencies: canViewDependencies,
+                    can_plan_dependencies: canPlanDependencies,
+                    can_apply_dependencies: canApplyDependencies
                 })
             });
 
@@ -547,6 +659,8 @@
 
             showNotification('Permission set successfully', 'success');
             document.getElementById('addPermissionForm').reset();
+            // Reset visibility of conditional fields
+            handleResourceTypeChange('project');
             loadTeams().then(() => {
                 const team = teams.find(t => t.id === currentTeamId);
                 if (team) renderPermissions(team);
