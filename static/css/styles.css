@@ -1225,3 +1225,55 @@ html, body {
     background-color: var(--bg-tertiary);
     font-weight: 500;
 }
+
+/* Alert Messages */
+.alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.alert-success {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.alert-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.dark .alert-success {
+    background-color: #064e3b;
+    color: #6ee7b7;
+    border: 1px solid #065f46;
+}
+
+.dark .alert-error {
+    background-color: #7f1d1d;
+    color: #fca5a5;
+    border: 1px solid #991b1b;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* Button improvements for password fields */
+.form-group input[type="password"] {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}

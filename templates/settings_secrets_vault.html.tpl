@@ -195,16 +195,91 @@
                     <!-- Settings Card -->
                     <div class="card">
                         <h3 data-i18n="settings.secrets_vault.title">Secrets Vault</h3>
-                        <p data-i18n="settings.secrets_vault.description">Configure Secrets Vault settings and options.</p>
+                        <p data-i18n="settings.secrets_vault.description">Configure your HashiCorp Vault integration for secure secret management.</p>
                     </div>
 
-                    <!-- Settings Sections -->
+                    <!-- Settings Form -->
                     <div class="activity-section">
                         <div class="activity-header">
                             <h4 data-i18n="settings.secrets_vault.configuration">Configuration</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="settings.secrets_vault.configuration_description">Secrets Vault configuration options will appear here.</p>
+                            <form id="vaultConfigForm">
+                                <div class="form-group">
+                                    <label for="vaultUrl">Vault URL *</label>
+                                    <input 
+                                        type="text" 
+                                        id="vaultUrl" 
+                                        name="vaultUrl" 
+                                        placeholder="http://localhost:8200"
+                                        required
+                                    />
+                                    <small>The URL of your HashiCorp Vault server (e.g., http://localhost:8200)</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="vaultToken">Vault Token *</label>
+                                    <input 
+                                        type="password" 
+                                        id="vaultToken" 
+                                        name="vaultToken" 
+                                        placeholder="Enter your Vault token"
+                                        required
+                                    />
+                                    <small>Authentication token for accessing Vault</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="vaultNamespace">Vault Namespace (Optional)</label>
+                                    <input 
+                                        type="text" 
+                                        id="vaultNamespace" 
+                                        name="vaultNamespace" 
+                                        placeholder="Leave empty for non-enterprise Vault"
+                                    />
+                                    <small>Namespace for Vault Enterprise (leave empty for open source Vault)</small>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Test Connection
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                        </svg>
+                                        Save Configuration
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Status Messages -->
+                            <div id="statusMessage" style="margin-top: 20px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Info Section -->
+                    <div class="activity-section">
+                        <div class="activity-header">
+                            <h4>About HashiCorp Vault Integration</h4>
+                        </div>
+                        <div class="activity-content">
+                            <p>HashiCorp Vault provides secure secret management for your infrastructure. Once configured, Colonia can use Vault to:</p>
+                            <ul>
+                                <li>Store and retrieve sensitive credentials</li>
+                                <li>Manage encryption keys</li>
+                                <li>Control access to secrets with fine-grained policies</li>
+                                <li>Audit secret access</li>
+                            </ul>
+                            <p><strong>Default Configuration for Development:</strong></p>
+                            <ul>
+                                <li><strong>Vault URL:</strong> http://localhost:8200 (or http://vault:8200 inside Docker)</li>
+                                <li><strong>Token:</strong> root (for dev mode)</li>
+                                <li><strong>Namespace:</strong> Leave empty</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -231,5 +306,148 @@
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/sidebar.js"></script>
+    <script>
+        // Load current configuration on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVaultConfig();
+        });
+
+        function loadVaultConfig() {
+            fetch('/api/vault/config')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('vaultUrl').value = data.url || '';
+                    document.getElementById('vaultNamespace').value = data.namespace || '';
+                    // Don't populate the token field for security reasons
+                    if (data.token_set) {
+                        document.getElementById('vaultToken').placeholder = '••••••••••••••••';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading vault config:', error);
+                });
+        }
+
+        function showMessage(message, isError = false) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = `
+                <div class="alert ${isError ? 'alert-error' : 'alert-success'}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Handle test connection button
+        document.getElementById('testConnectionBtn').addEventListener('click', function() {
+            const url = document.getElementById('vaultUrl').value.trim();
+            const token = document.getElementById('vaultToken').value.trim();
+            const namespace = document.getElementById('vaultNamespace').value.trim();
+
+            if (!url) {
+                showMessage('Please enter a Vault URL', true);
+                return;
+            }
+
+            if (!token) {
+                showMessage('Please enter a Vault token', true);
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+
+            fetch('/api/vault/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    token: token,
+                    namespace: namespace || null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('✓ ' + data.message, false);
+                } else {
+                    showMessage('✗ ' + data.message, true);
+                }
+            })
+            .catch(error => {
+                showMessage('Error testing connection: ' + error.message, true);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Test Connection
+                `;
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('vaultConfigForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const url = document.getElementById('vaultUrl').value.trim();
+            const token = document.getElementById('vaultToken').value.trim();
+            const namespace = document.getElementById('vaultNamespace').value.trim();
+
+            if (!url) {
+                showMessage('Please enter a Vault URL', true);
+                return;
+            }
+
+            if (!token) {
+                showMessage('Please enter a Vault token', true);
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.textContent = 'Saving...';
+
+            fetch('/api/vault/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    token: token,
+                    namespace: namespace || null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showMessage('✓ ' + data.message, false);
+                    // Clear the token field for security
+                    document.getElementById('vaultToken').value = '';
+                    document.getElementById('vaultToken').placeholder = '••••••••••••••••';
+                } else if (data.error) {
+                    showMessage('✗ ' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('Error saving configuration: ' + error.message, true);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    </script>
 </body>
 </html>
