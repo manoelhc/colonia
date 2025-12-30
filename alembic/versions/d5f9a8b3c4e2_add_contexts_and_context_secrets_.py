@@ -1,7 +1,7 @@
 """add contexts and context_secrets tables
 
 Revision ID: d5f9a8b3c4e2
-Revises: c0cba37890a4
+Revises: 44c7ee145272
 Create Date: 2025-12-30 20:20:00.000000
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'd5f9a8b3c4e2'
-down_revision: Union[str, Sequence[str], None] = 'c0cba37890a4'
+down_revision: Union[str, Sequence[str], None] = '44c7ee145272'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
