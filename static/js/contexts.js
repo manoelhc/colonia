@@ -177,21 +177,21 @@
         }
 
         const html = contexts.map(context => `
-            <div class="context-card" data-context-id="${escapeHtml(context.id)}">
+            <div class="context-card" data-context-id="${parseInt(context.id)}">
                 <div class="context-card-header">
                     <h4>${escapeHtml(context.name)}</h4>
                     <div class="context-actions">
-                        <button class="btn-icon" onclick="contextsModule.openSecretsDrawer(${context.id})" title="Set Secrets">
+                        <button class="btn-icon" onclick="contextsModule.openSecretsDrawer(${parseInt(context.id)})" title="Set Secrets">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                             </svg>
                         </button>
-                        <button class="btn-icon" onclick="contextsModule.editContext(${context.id})" title="Edit">
+                        <button class="btn-icon" onclick="contextsModule.editContext(${parseInt(context.id)})" title="Edit">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                         </button>
-                        <button class="btn-icon" onclick="contextsModule.deleteContext(${context.id})" title="Delete">
+                        <button class="btn-icon" onclick="contextsModule.deleteContext(${parseInt(context.id)})" title="Delete">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -397,7 +397,7 @@
                     <div class="secret-key">${escapeHtml(secret.secret_key)}</div>
                     <div class="secret-path">${escapeHtml(secret.vault_path)}</div>
                 </div>
-                <button class="btn-icon" onclick="contextsModule.deleteSecret(${currentContextIdForSecrets}, ${secret.id})" title="Delete">
+                <button class="btn-icon" onclick="contextsModule.deleteSecret(${parseInt(currentContextIdForSecrets)}, ${parseInt(secret.id)})" title="Delete">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
