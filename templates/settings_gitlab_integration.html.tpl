@@ -123,16 +123,16 @@
                             </svg>
                         </a>
                         <ul class="nav-dropdown-menu">
-                            <li><a href="/settings/ai-integration" data-i18n="nav.settings.ai_integration">AI Integration</a></li>
-                            <li><a href="/settings/infracost" data-i18n="nav.settings.infracost">Infracost</a></li>
-                            <li><a href="/settings/backend-storage" data-i18n="nav.settings.backend_storage">Backend Storage</a></li>
-                            <li><a href="/settings/secrets-vault" data-i18n="nav.settings.secrets_vault">Secrets Vault</a></li>
-                            <li><a href="/settings/container-registry" data-i18n="nav.settings.container_registry">Container Registry</a></li>
-                            <li><a href="/settings/database-integration" data-i18n="nav.settings.database_integration">Database Integration</a></li>
-                            <li><a href="/settings/rabbitmq-integration" data-i18n="nav.settings.rabbitmq_integration">RabbitMQ Integration</a></li>
-                            <li><a href="/settings/redis-integration" data-i18n="nav.settings.redis_integration">Redis Integration</a></li>
-                            <li><a href="/settings/github-integration" data-i18n="nav.settings.github_integration">GitHub Integration</a></li>
-                            <li><a href="/settings/gitlab-integration" class="active" data-i18n="nav.settings.gitlab_integration">GitLab Integration</a></li>
+                            <li><a href="/settings/ai-integration" data-i18n="nav.settings_menu.ai_integration">AI Integration</a></li>
+                            <li><a href="/settings/infracost" data-i18n="nav.settings_menu.infracost">Infracost</a></li>
+                            <li><a href="/settings/backend-storage" data-i18n="nav.settings_menu.backend_storage">Backend Storage</a></li>
+                            <li><a href="/settings/secrets-vault" data-i18n="nav.settings_menu.secrets_vault">Secrets Vault</a></li>
+                            <li><a href="/settings/container-registry" data-i18n="nav.settings_menu.container_registry">Container Registry</a></li>
+                            <li><a href="/settings/database-integration" data-i18n="nav.settings_menu.database_integration">Database Integration</a></li>
+                            <li><a href="/settings/rabbitmq-integration" data-i18n="nav.settings_menu.rabbitmq_integration">RabbitMQ Integration</a></li>
+                            <li><a href="/settings/redis-integration" data-i18n="nav.settings_menu.redis_integration">Redis Integration</a></li>
+                            <li><a href="/settings/github-integration" data-i18n="nav.settings_menu.github_integration">GitHub Integration</a></li>
+                            <li><a href="/settings/gitlab-integration" class="active" data-i18n="nav.settings_menu.gitlab_integration">GitLab Integration</a></li>
                         </ul>
                     </li>
                     <li>

@@ -9,7 +9,10 @@
     "stacks": "Stacks",
     "environments": "Environments",
     "contexts": "Contexts",
-    "settings": {
+    "settings": "Settings",
+    "users": "Users",
+    "teams": "Teams",
+    "settings_menu": {
       "ai_integration": "AI Integration",
       "infracost": "Infracost",
       "backend_storage": "Backend Storage",
@@ -20,9 +23,7 @@
       "redis_integration": "Redis Integration",
       "github_integration": "GitHub Integration",
       "gitlab_integration": "GitLab Integration"
-    },
-    "users": "Users",
-    "teams": "Teams"
+    }
   },
   "page": {
     "dashboard": "Dashboard",

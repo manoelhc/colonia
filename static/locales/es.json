@@ -9,7 +9,10 @@
     "stacks": "Pilas",
     "environments": "Entornos",
     "contexts": "Contextos",
-    "settings": {
+    "settings": "Configuración",
+    "users": "Usuarios",
+    "teams": "Equipos",
+    "settings_menu": {
       "ai_integration": "Integración de IA",
       "infracost": "Infracost",
       "backend_storage": "Almacenamiento Backend",
@@ -20,9 +23,7 @@
       "redis_integration": "Integración Redis",
       "github_integration": "Integración GitHub",
       "gitlab_integration": "Integración GitLab"
-    },
-    "users": "Usuarios",
-    "teams": "Equipos"
+    }
   },
   "page": {
     "dashboard": "Panel",
