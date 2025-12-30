@@ -27,6 +27,8 @@ from app.api import (
     get_vault_config_handler,
     save_vault_config_handler,
     test_vault_connection_handler,
+    list_secrets_engines_handler,
+    enable_secrets_engine_handler,
 )
 
 app = Rupy()
@@ -282,6 +284,18 @@ def api_save_vault_config(request: Request) -> Response:
 def api_test_vault_connection(request: Request) -> Response:
     """Test Vault connection."""
     return test_vault_connection_handler(request, app)
+
+
+@app.route("/api/vault/secrets-engines", methods=["GET"])
+def api_list_secrets_engines(request: Request) -> Response:
+    """List all secrets engines in Vault."""
+    return list_secrets_engines_handler(request, app)
+
+
+@app.route("/api/vault/secrets-engine", methods=["POST"])
+def api_enable_secrets_engine(request: Request) -> Response:
+    """Enable a secrets engine in Vault."""
+    return enable_secrets_engine_handler(request, app)
 
 
 def main():

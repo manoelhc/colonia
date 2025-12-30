@@ -261,25 +261,66 @@
                         </div>
                     </div>
 
-                    <!-- Info Section -->
+                    <!-- Secrets Engine Configuration Section -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4>About HashiCorp Vault Integration</h4>
+                            <h4>Secrets Engine Configuration</h4>
                         </div>
                         <div class="activity-content">
-                            <p>HashiCorp Vault provides secure secret management for your infrastructure. Once configured, Colonia can use Vault to:</p>
-                            <ul>
-                                <li>Store and retrieve sensitive credentials</li>
-                                <li>Manage encryption keys</li>
-                                <li>Control access to secrets with fine-grained policies</li>
-                                <li>Audit secret access</li>
-                            </ul>
-                            <p><strong>Default Configuration for Development:</strong></p>
-                            <ul>
-                                <li><strong>Vault URL:</strong> http://localhost:8200 (or http://vault:8200 inside Docker)</li>
-                                <li><strong>Token:</strong> root (for dev mode)</li>
-                                <li><strong>Namespace:</strong> Leave empty</li>
-                            </ul>
+                            <p>Configure the secrets engine path for Colonia projects. This path will be used to create contexts that can be attached to stacks and environments.</p>
+                            
+                            <form id="secretsEngineForm">
+                                <div class="form-group">
+                                    <label for="secretsEngineType">Secrets Engine Type *</label>
+                                    <select id="secretsEngineType" name="secretsEngineType" required>
+                                        <option value="">Select secrets engine type</option>
+                                        <option value="kv">KV (Key-Value) - Version 1</option>
+                                        <option value="kv-v2">KV (Key-Value) - Version 2</option>
+                                    </select>
+                                    <small>Select the type of secrets engine to use</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="secretsEnginePath">Secrets Engine Path *</label>
+                                    <input 
+                                        type="text" 
+                                        id="secretsEnginePath" 
+                                        name="secretsEnginePath" 
+                                        placeholder="colonia"
+                                        required
+                                    />
+                                    <small>Path where the secrets engine will be mounted (e.g., colonia, projects, secrets)</small>
+                                </div>
+
+                                <div class="form-group" id="maxVersionsGroup" style="display: none;">
+                                    <label for="maxVersions">Maximum Number of Versions</label>
+                                    <input 
+                                        type="number" 
+                                        id="maxVersions" 
+                                        name="maxVersions" 
+                                        placeholder="10"
+                                        min="1"
+                                        max="100"
+                                        value="10"
+                                    />
+                                    <small>Maximum number of secret versions to keep (KV v2 only, default: 10)</small>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        Enable Secrets Engine
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Secrets Engine Status -->
+                            <div id="secretsEngineStatus" style="margin-top: 20px;"></div>
+
+                            <!-- List of Configured Secrets Engines -->
+                            <div id="secretsEnginesList" style="margin-top: 20px;"></div>
                         </div>
                     </div>
                 </div>
@@ -447,6 +488,120 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
             });
+        });
+
+        // Show/hide max versions field based on secrets engine type
+        document.getElementById('secretsEngineType').addEventListener('change', function() {
+            const maxVersionsGroup = document.getElementById('maxVersionsGroup');
+            if (this.value === 'kv-v2') {
+                maxVersionsGroup.style.display = 'block';
+            } else {
+                maxVersionsGroup.style.display = 'none';
+            }
+        });
+
+        // Handle secrets engine form submission
+        document.getElementById('secretsEngineForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const engineType = document.getElementById('secretsEngineType').value;
+            const enginePath = document.getElementById('secretsEnginePath').value.trim();
+            const maxVersions = document.getElementById('maxVersions').value;
+
+            if (!engineType) {
+                showSecretsEngineMessage('Please select a secrets engine type', true);
+                return;
+            }
+
+            if (!enginePath) {
+                showSecretsEngineMessage('Please enter a secrets engine path', true);
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.textContent = 'Enabling...';
+
+            const requestData = {
+                engine_type: engineType,
+                path: enginePath
+            };
+
+            if (engineType === 'kv-v2' && maxVersions) {
+                requestData.max_versions = parseInt(maxVersions);
+            }
+
+            fetch('/api/vault/secrets-engine', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showSecretsEngineMessage('✓ ' + data.message, false);
+                    // Reload the list of secrets engines
+                    loadSecretsEngines();
+                    // Reset form
+                    document.getElementById('secretsEngineForm').reset();
+                    document.getElementById('maxVersionsGroup').style.display = 'none';
+                } else if (data.error) {
+                    showSecretsEngineMessage('✗ ' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showSecretsEngineMessage('Error enabling secrets engine: ' + error.message, true);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+
+        function showSecretsEngineMessage(message, isError = false) {
+            const statusDiv = document.getElementById('secretsEngineStatus');
+            statusDiv.innerHTML = `
+                <div class="alert ${isError ? 'alert-error' : 'alert-success'}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function loadSecretsEngines() {
+            fetch('/api/vault/secrets-engines')
+                .then(response => response.json())
+                .then(data => {
+                    const listDiv = document.getElementById('secretsEnginesList');
+                    if (data.engines && data.engines.length > 0) {
+                        let html = '<h5>Configured Secrets Engines:</h5><ul style="list-style: none; padding: 0;">';
+                        data.engines.forEach(engine => {
+                            html += `<li style="padding: 8px; border-bottom: 1px solid var(--border-color);">
+                                <strong>${engine.path}</strong> - ${engine.type}
+                                ${engine.description ? ` (${engine.description})` : ''}
+                            </li>`;
+                        });
+                        html += '</ul>';
+                        listDiv.innerHTML = html;
+                    } else {
+                        listDiv.innerHTML = '<p style="color: var(--text-secondary);">No secrets engines configured yet.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading secrets engines:', error);
+                });
+        }
+
+        // Load secrets engines on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSecretsEngines();
         });
     </script>
 </body>
