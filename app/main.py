@@ -24,6 +24,11 @@ from app.api import (
     remove_team_member_handler,
     set_team_permission_handler,
     delete_team_permission_handler,
+    get_vault_config_handler,
+    save_vault_config_handler,
+    test_vault_connection_handler,
+    list_secrets_engines_handler,
+    enable_secrets_engine_handler,
 )
 
 app = Rupy()
@@ -260,6 +265,37 @@ def api_team_set_permission(request: Request, team_id: str) -> Response:
 def api_team_delete_permission(request: Request, team_id: str, permission_id: str) -> Response:
     """Delete a team permission."""
     return delete_team_permission_handler(request, app, team_id, permission_id)
+
+
+# Vault API Routes
+@app.route("/api/vault/config", methods=["GET"])
+def api_get_vault_config(request: Request) -> Response:
+    """Get Vault configuration."""
+    return get_vault_config_handler(request, app)
+
+
+@app.route("/api/vault/config", methods=["POST"])
+def api_save_vault_config(request: Request) -> Response:
+    """Save Vault configuration."""
+    return save_vault_config_handler(request, app)
+
+
+@app.route("/api/vault/test", methods=["POST"])
+def api_test_vault_connection(request: Request) -> Response:
+    """Test Vault connection."""
+    return test_vault_connection_handler(request, app)
+
+
+@app.route("/api/vault/secrets-engines", methods=["GET"])
+def api_list_secrets_engines(request: Request) -> Response:
+    """List all secrets engines in Vault."""
+    return list_secrets_engines_handler(request, app)
+
+
+@app.route("/api/vault/secrets-engine", methods=["POST"])
+def api_enable_secrets_engine(request: Request) -> Response:
+    """Enable a secrets engine in Vault."""
+    return enable_secrets_engine_handler(request, app)
 
 
 def main():

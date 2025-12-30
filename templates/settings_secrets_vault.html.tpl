@@ -195,16 +195,132 @@
                     <!-- Settings Card -->
                     <div class="card">
                         <h3 data-i18n="settings.secrets_vault.title">Secrets Vault</h3>
-                        <p data-i18n="settings.secrets_vault.description">Configure Secrets Vault settings and options.</p>
+                        <p data-i18n="settings.secrets_vault.description">Configure your HashiCorp Vault integration for secure secret management.</p>
                     </div>
 
-                    <!-- Settings Sections -->
+                    <!-- Settings Form -->
                     <div class="activity-section">
                         <div class="activity-header">
                             <h4 data-i18n="settings.secrets_vault.configuration">Configuration</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="settings.secrets_vault.configuration_description">Secrets Vault configuration options will appear here.</p>
+                            <form id="vaultConfigForm">
+                                <div class="form-group">
+                                    <label for="vaultUrl">Vault URL *</label>
+                                    <input 
+                                        type="text" 
+                                        id="vaultUrl" 
+                                        name="vaultUrl" 
+                                        placeholder="http://localhost:8200"
+                                        required
+                                    />
+                                    <small>The URL of your HashiCorp Vault server (e.g., http://localhost:8200)</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="vaultToken">Vault Token *</label>
+                                    <input 
+                                        type="password" 
+                                        id="vaultToken" 
+                                        name="vaultToken" 
+                                        placeholder="Enter your Vault token"
+                                        required
+                                    />
+                                    <small>Authentication token for accessing Vault</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="vaultNamespace">Vault Namespace (Optional)</label>
+                                    <input 
+                                        type="text" 
+                                        id="vaultNamespace" 
+                                        name="vaultNamespace" 
+                                        placeholder="Leave empty for non-enterprise Vault"
+                                    />
+                                    <small>Namespace for Vault Enterprise (leave empty for open source Vault)</small>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Test Connection
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                        </svg>
+                                        Save Configuration
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Status Messages -->
+                            <div id="statusMessage" style="margin-top: 20px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Secrets Engine Configuration Section -->
+                    <div class="activity-section">
+                        <div class="activity-header">
+                            <h4>Secrets Engine Configuration</h4>
+                        </div>
+                        <div class="activity-content">
+                            <p>Configure the secrets engine path for Colonia projects. This path will be used to create contexts that can be attached to stacks and environments.</p>
+                            
+                            <form id="secretsEngineForm">
+                                <div class="form-group">
+                                    <label for="secretsEngineType">Secrets Engine Type *</label>
+                                    <select id="secretsEngineType" name="secretsEngineType" required>
+                                        <option value="">Select secrets engine type</option>
+                                        <option value="kv">KV (Key-Value) - Version 1</option>
+                                        <option value="kv-v2">KV (Key-Value) - Version 2</option>
+                                    </select>
+                                    <small>Select the type of secrets engine to use</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="secretsEnginePath">Secrets Engine Path *</label>
+                                    <input 
+                                        type="text" 
+                                        id="secretsEnginePath" 
+                                        name="secretsEnginePath" 
+                                        placeholder="colonia"
+                                        required
+                                    />
+                                    <small>Path where the secrets engine will be mounted (e.g., colonia, projects, secrets)</small>
+                                </div>
+
+                                <div class="form-group" id="maxVersionsGroup" style="display: none;">
+                                    <label for="maxVersions">Maximum Number of Versions</label>
+                                    <input 
+                                        type="number" 
+                                        id="maxVersions" 
+                                        name="maxVersions" 
+                                        placeholder="10"
+                                        min="1"
+                                        max="100"
+                                        value="10"
+                                    />
+                                    <small>Maximum number of secret versions to keep (KV v2 only, default: 10)</small>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        Enable Secrets Engine
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Secrets Engine Status -->
+                            <div id="secretsEngineStatus" style="margin-top: 20px;"></div>
+
+                            <!-- List of Configured Secrets Engines -->
+                            <div id="secretsEnginesList" style="margin-top: 20px;"></div>
                         </div>
                     </div>
                 </div>
@@ -231,5 +347,265 @@
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/sidebar.js"></script>
+    <script>
+        // Load current configuration on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVaultConfig();
+        });
+
+        function loadVaultConfig() {
+            fetch('/api/vault/config')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('vaultUrl').value = data.url || '';
+                    document.getElementById('vaultNamespace').value = data.namespace || '';
+                    // Don't populate the token field for security reasons
+                    if (data.token_set) {
+                        document.getElementById('vaultToken').placeholder = '••••••••••••••••';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading vault config:', error);
+                });
+        }
+
+        function showMessage(message, isError = false) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = `
+                <div class="alert ${isError ? 'alert-error' : 'alert-success'}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Handle test connection button
+        document.getElementById('testConnectionBtn').addEventListener('click', function() {
+            const url = document.getElementById('vaultUrl').value.trim();
+            const token = document.getElementById('vaultToken').value.trim();
+            const namespace = document.getElementById('vaultNamespace').value.trim();
+
+            if (!url) {
+                showMessage('Please enter a Vault URL', true);
+                return;
+            }
+
+            if (!token) {
+                showMessage('Please enter a Vault token', true);
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+
+            fetch('/api/vault/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    token: token,
+                    namespace: namespace || null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('✓ ' + data.message, false);
+                } else {
+                    showMessage('✗ ' + data.message, true);
+                }
+            })
+            .catch(error => {
+                showMessage('Error testing connection: ' + error.message, true);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Test Connection
+                `;
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('vaultConfigForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const url = document.getElementById('vaultUrl').value.trim();
+            const token = document.getElementById('vaultToken').value.trim();
+            const namespace = document.getElementById('vaultNamespace').value.trim();
+
+            if (!url) {
+                showMessage('Please enter a Vault URL', true);
+                return;
+            }
+
+            if (!token) {
+                showMessage('Please enter a Vault token', true);
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.textContent = 'Saving...';
+
+            fetch('/api/vault/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    token: token,
+                    namespace: namespace || null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showMessage('✓ ' + data.message, false);
+                    // Clear the token field for security
+                    document.getElementById('vaultToken').value = '';
+                    document.getElementById('vaultToken').placeholder = '••••••••••••••••';
+                } else if (data.error) {
+                    showMessage('✗ ' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('Error saving configuration: ' + error.message, true);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+
+        // Show/hide max versions field based on secrets engine type
+        document.getElementById('secretsEngineType').addEventListener('change', function() {
+            const maxVersionsGroup = document.getElementById('maxVersionsGroup');
+            if (this.value === 'kv-v2') {
+                maxVersionsGroup.style.display = 'block';
+            } else {
+                maxVersionsGroup.style.display = 'none';
+            }
+        });
+
+        // Handle secrets engine form submission
+        document.getElementById('secretsEngineForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const engineType = document.getElementById('secretsEngineType').value;
+            const enginePath = document.getElementById('secretsEnginePath').value.trim();
+            const maxVersions = document.getElementById('maxVersions').value;
+
+            if (!engineType) {
+                showSecretsEngineMessage('Please select a secrets engine type', true);
+                return;
+            }
+
+            if (!enginePath) {
+                showSecretsEngineMessage('Please enter a secrets engine path', true);
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.textContent = 'Enabling...';
+
+            const requestData = {
+                engine_type: engineType,
+                path: enginePath
+            };
+
+            if (engineType === 'kv-v2' && maxVersions) {
+                const parsedMaxVersions = parseInt(maxVersions, 10);
+                if (!isNaN(parsedMaxVersions) && parsedMaxVersions > 0) {
+                    requestData.max_versions = parsedMaxVersions;
+                }
+            }
+
+            fetch('/api/vault/secrets-engine', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showSecretsEngineMessage('✓ ' + data.message, false);
+                    // Reload the list of secrets engines
+                    loadSecretsEngines();
+                    // Reset form
+                    document.getElementById('secretsEngineForm').reset();
+                    document.getElementById('maxVersionsGroup').style.display = 'none';
+                } else if (data.error) {
+                    showSecretsEngineMessage('✗ ' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showSecretsEngineMessage('Error enabling secrets engine: ' + error.message, true);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+
+        function showSecretsEngineMessage(message, isError = false) {
+            const statusDiv = document.getElementById('secretsEngineStatus');
+            statusDiv.innerHTML = `
+                <div class="alert ${isError ? 'alert-error' : 'alert-success'}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function loadSecretsEngines() {
+            fetch('/api/vault/secrets-engines')
+                .then(response => response.json())
+                .then(data => {
+                    const listDiv = document.getElementById('secretsEnginesList');
+                    if (data.engines && data.engines.length > 0) {
+                        let html = '<h5>Configured Secrets Engines:</h5><ul style="list-style: none; padding: 0;">';
+                        data.engines.forEach(engine => {
+                            html += `<li style="padding: 8px; border-bottom: 1px solid var(--border-color);">
+                                <strong>${engine.path}</strong> - ${engine.type}
+                                ${engine.description ? ` (${engine.description})` : ''}
+                            </li>`;
+                        });
+                        html += '</ul>';
+                        listDiv.innerHTML = html;
+                    } else {
+                        listDiv.innerHTML = '<p style="color: var(--text-secondary);">No secrets engines configured yet.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading secrets engines:', error);
+                });
+        }
+
+        // Load secrets engines on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSecretsEngines();
+        });
+    </script>
 </body>
 </html>

@@ -15,6 +15,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "requests>=2.32.3",
     "psycopg2-binary>=2.9.10",
+    "hvac>=2.3.0",
 ]
 
 [dependency-groups]

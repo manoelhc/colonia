@@ -10,6 +10,8 @@ from sqlmodel import select, func
 from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
+from app.config import get_vault_config, set_vault_config
+from app.vault import test_vault_connection, list_secrets_engines, enable_secrets_engine
 
 # Get logger without configuring it at module level
 logger = logging.getLogger(__name__)
@@ -1621,6 +1623,356 @@ def delete_team_permission_handler(request: Request, app, team_id: str, permissi
 
     except Exception as e:
         logger.error(f"Error deleting team permission: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Vault API Handlers
+def get_vault_config_handler(request: Request, app) -> Response:
+    """Get the current Vault configuration."""
+    try:
+        vault_config = get_vault_config()
+        
+        if vault_config:
+            # Don't send the token back to the client, just indicate if it's set
+            response_data = {
+                "url": vault_config.get("url", ""),
+                "token_set": bool(vault_config.get("token")),
+                "namespace": vault_config.get("namespace", "")
+            }
+        else:
+            response_data = {
+                "url": "",
+                "token_set": False,
+                "namespace": ""
+            }
+        
+        response = Response(json.dumps(response_data), status=200)
+        response.set_header("Content-Type", "application/json")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error getting vault config: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def save_vault_config_handler(request: Request, app) -> Response:
+    """Save Vault configuration."""
+    try:
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        # Validate required fields
+        if "url" not in data or not data["url"]:
+            response = Response(
+                json.dumps({"error": "Vault URL is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        if "token" not in data or not data["token"]:
+            response = Response(
+                json.dumps({"error": "Vault token is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        # Sanitize inputs
+        vault_url = sanitize_url(data["url"])
+        if not vault_url:
+            response = Response(
+                json.dumps({"error": "Invalid Vault URL format"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        vault_token = sanitize_string(data["token"], max_length=500)
+        vault_namespace = sanitize_string(data.get("namespace", ""), max_length=255) or None
+        
+        # Save configuration
+        success = set_vault_config(vault_url, vault_token, vault_namespace)
+        
+        if success:
+            response = Response(
+                json.dumps({"message": "Vault configuration saved successfully"}), 
+                status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        else:
+            response = Response(
+                json.dumps({"error": "Failed to save Vault configuration"}), 
+                status=500
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error saving vault config: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def test_vault_connection_handler(request: Request, app) -> Response:
+    """Test connection to Vault server."""
+    try:
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        # Validate required fields
+        if "url" not in data or not data["url"]:
+            response = Response(
+                json.dumps({"error": "Vault URL is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        if "token" not in data or not data["token"]:
+            response = Response(
+                json.dumps({"error": "Vault token is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        # Sanitize inputs
+        vault_url = sanitize_url(data["url"])
+        if not vault_url:
+            response = Response(
+                json.dumps({"error": "Invalid Vault URL format"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        vault_token = sanitize_string(data["token"], max_length=500)
+        vault_namespace = sanitize_string(data.get("namespace", ""), max_length=255) or None
+        
+        # Test connection
+        success, message = test_vault_connection(vault_url, vault_token, vault_namespace)
+        
+        if success:
+            response = Response(
+                json.dumps({"success": True, "message": message}), 
+                status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        else:
+            response = Response(
+                json.dumps({"success": False, "message": message}), 
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error testing vault connection: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def list_secrets_engines_handler(request: Request, app) -> Response:
+    """List all secrets engines in Vault."""
+    try:
+        # Get Vault configuration
+        vault_config = get_vault_config()
+        if not vault_config:
+            response = Response(
+                json.dumps({"error": "Vault is not configured"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        vault_url = vault_config.get('url')
+        vault_token = vault_config.get('token')
+        vault_namespace = vault_config.get('namespace')
+        
+        if not vault_url or not vault_token:
+            response = Response(
+                json.dumps({"error": "Vault URL and token are required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        # List secrets engines
+        success, result = list_secrets_engines(vault_url, vault_token, vault_namespace)
+        
+        if success:
+            response = Response(
+                json.dumps({"engines": result}), 
+                status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        else:
+            response = Response(
+                json.dumps({"error": result}), 
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing secrets engines: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def enable_secrets_engine_handler(request: Request, app) -> Response:
+    """Enable a secrets engine in Vault."""
+    try:
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        # Validate required fields
+        if "engine_type" not in data or not data["engine_type"]:
+            response = Response(
+                json.dumps({"error": "Engine type is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        if "path" not in data or not data["path"]:
+            response = Response(
+                json.dumps({"error": "Path is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        # Get Vault configuration
+        vault_config = get_vault_config()
+        if not vault_config:
+            response = Response(
+                json.dumps({"error": "Vault is not configured"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        vault_url = vault_config.get('url')
+        vault_token = vault_config.get('token')
+        vault_namespace = vault_config.get('namespace')
+        
+        if not vault_url or not vault_token:
+            response = Response(
+                json.dumps({"error": "Vault URL and token are required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        # Sanitize inputs
+        engine_type = sanitize_string(data["engine_type"], max_length=50)
+        path = sanitize_string(data["path"], max_length=255)
+        max_versions = data.get("max_versions")
+        
+        # Validate engine type
+        if engine_type not in ['kv', 'kv-v2']:
+            response = Response(
+                json.dumps({"error": "Invalid engine type. Must be 'kv' or 'kv-v2'"}), 
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        
+        # Validate max_versions if provided
+        if max_versions is not None:
+            try:
+                max_versions = int(max_versions)
+                if max_versions < 1 or max_versions > 100:
+                    response = Response(
+                        json.dumps({"error": "Max versions must be between 1 and 100"}), 
+                        status=400
+                    )
+                    response.set_header("Content-Type", "application/json")
+                    return response
+            except (ValueError, TypeError):
+                response = Response(
+                    json.dumps({"error": "Max versions must be a valid number"}), 
+                    status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+        
+        # Enable secrets engine
+        success, message = enable_secrets_engine(
+            vault_url, 
+            vault_token, 
+            engine_type, 
+            path, 
+            vault_namespace, 
+            max_versions
+        )
+        
+        if success:
+            response = Response(
+                json.dumps({"message": message}), 
+                status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+        else:
+            response = Response(
+                json.dumps({"error": message}), 
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error enabling secrets engine: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )
