@@ -64,7 +64,9 @@
     "title": "Contexts",
     "description": "Manage shareable collections of environment variables. Contexts can be shared across multiple stacks to simplify configuration management.",
     "list": "Context List",
-    "no_contexts": "No contexts found. Create your first context to share environment variables across stacks."
+    "no_contexts": "No contexts found. Create your first context to share environment variables across stacks.",
+    "add": "Add Context",
+    "loading": "Loading contexts..."
   },
   "settings": {
     "title": "Settings",

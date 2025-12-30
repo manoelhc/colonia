@@ -64,7 +64,9 @@
     "title": "Contextos",
     "description": "Gerencie coleções compartilháveis de variáveis de ambiente. Contextos podem ser compartilhados entre várias pilhas para simplificar o gerenciamento de configuração.",
     "list": "Lista de Contextos",
-    "no_contexts": "Nenhum contexto encontrado. Crie seu primeiro contexto para compartilhar variáveis de ambiente entre pilhas."
+    "no_contexts": "Nenhum contexto encontrado. Crie seu primeiro contexto para compartilhar variáveis de ambiente entre pilhas.",
+    "add": "Adicionar Contexto",
+    "loading": "Carregando contextos..."
   },
   "settings": {
     "title": "Configurações",

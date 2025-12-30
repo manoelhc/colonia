@@ -29,6 +29,14 @@ from app.api import (
     test_vault_connection_handler,
     list_secrets_engines_handler,
     enable_secrets_engine_handler,
+    create_context_handler,
+    list_contexts_handler,
+    get_context_handler,
+    update_context_handler,
+    delete_context_handler,
+    list_context_secrets_handler,
+    add_context_secret_handler,
+    delete_context_secret_handler,
 )
 
 app = Rupy()
@@ -296,6 +304,42 @@ def api_list_secrets_engines(request: Request) -> Response:
 def api_enable_secrets_engine(request: Request) -> Response:
     """Enable a secrets engine in Vault."""
     return enable_secrets_engine_handler(request, app)
+
+
+# Context API Routes
+@app.route("/api/contexts", methods=["GET", "POST"])
+def api_contexts(request: Request) -> Response:
+    """Handle contexts API endpoint."""
+    if request.method == "POST":
+        return create_context_handler(request, app)
+    else:  # GET
+        return list_contexts_handler(request, app)
+
+
+@app.route("/api/contexts/<context_id>", methods=["GET", "PUT", "DELETE"])
+def api_context(request: Request, context_id: str) -> Response:
+    """Handle single context API endpoint."""
+    if request.method == "GET":
+        return get_context_handler(request, app, context_id)
+    elif request.method == "PUT":
+        return update_context_handler(request, app, context_id)
+    else:  # DELETE
+        return delete_context_handler(request, app, context_id)
+
+
+@app.route("/api/contexts/<context_id>/secrets", methods=["GET", "POST"])
+def api_context_secrets(request: Request, context_id: str) -> Response:
+    """Handle context secrets API endpoint."""
+    if request.method == "POST":
+        return add_context_secret_handler(request, app, context_id)
+    else:  # GET
+        return list_context_secrets_handler(request, app, context_id)
+
+
+@app.route("/api/contexts/<context_id>/secrets/<secret_id>", methods=["DELETE"])
+def api_context_secret(request: Request, context_id: str, secret_id: str) -> Response:
+    """Handle single context secret API endpoint."""
+    return delete_context_secret_handler(request, app, context_id, secret_id)
 
 
 def main():

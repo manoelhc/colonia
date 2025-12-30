@@ -194,8 +194,18 @@
                 <div class="content-wrapper">
                     <!-- Contexts Overview Card -->
                     <div class="card">
-                        <h3 data-i18n="contexts.title">Contexts</h3>
-                        <p data-i18n="contexts.description">Manage shareable collections of environment variables. Contexts can be shared across multiple stacks to simplify configuration management.</p>
+                        <div class="card-header-with-action">
+                            <div>
+                                <h3 data-i18n="contexts.title">Contexts</h3>
+                                <p data-i18n="contexts.description">Manage shareable collections of environment variables. Contexts can be shared across multiple stacks to simplify configuration management.</p>
+                            </div>
+                            <button id="addContextBtn" class="btn-primary">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span data-i18n="contexts.add">Add Context</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Contexts List -->
@@ -203,8 +213,8 @@
                         <div class="activity-header">
                             <h4 data-i18n="contexts.list">Context List</h4>
                         </div>
-                        <div class="activity-content">
-                            <p data-i18n="contexts.no_contexts">No contexts found. Create your first context to share environment variables across stacks.</p>
+                        <div id="contextsList" class="contexts-grid">
+                            <p class="loading" data-i18n="contexts.loading">Loading contexts...</p>
                         </div>
                     </div>
                 </div>
@@ -227,9 +237,81 @@
         </div>
     </div>
 
+    <!-- Context Modal -->
+    <div id="contextModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create New Context</h3>
+                <button class="modal-close" type="button">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="contextForm" class="modal-body">
+                <div class="form-group">
+                    <label for="contextName">Context Name <span class="required">*</span></label>
+                    <input type="text" id="contextName" name="name" required maxlength="255" placeholder="Enter context name">
+                </div>
+                <div class="form-group">
+                    <label for="contextDescription">Description</label>
+                    <textarea id="contextDescription" name="description" maxlength="1000" rows="4" placeholder="Enter context description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="contextProject">Project <span class="required">*</span></label>
+                    <select id="contextProject" name="project_id" required>
+                        <option value="">Select a project</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Context</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Secrets Drawer -->
+    <div id="secretsDrawer" class="drawer">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>Secrets for <span id="drawerContextName"></span></h3>
+                <button id="drawerClose" class="modal-close" type="button">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <!-- Add Secret Form -->
+                <form id="secretForm" class="secret-form">
+                    <h4>Add Secret</h4>
+                    <div class="form-group">
+                        <label for="secretKey">Secret Key <span class="required">*</span></label>
+                        <input type="text" id="secretKey" name="secret_key" required maxlength="255" placeholder="e.g., DATABASE_PASSWORD">
+                    </div>
+                    <div class="form-group">
+                        <label for="secretVaultPath">Vault Path <span class="required">*</span></label>
+                        <select id="secretVaultPath" name="vault_path" required>
+                            <option value="">Select a vault path</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Secret</button>
+                </form>
+
+                <!-- Secrets List -->
+                <div class="secrets-section">
+                    <h4>Configured Secrets</h4>
+                    <div id="secretsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/contexts.js"></script>
 </body>
 </html>

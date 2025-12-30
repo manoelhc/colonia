@@ -64,7 +64,9 @@
     "title": "Contextos",
     "description": "Gestiona colecciones compartibles de variables de entorno. Los contextos se pueden compartir entre múltiples pilas para simplificar la gestión de configuración.",
     "list": "Lista de Contextos",
-    "no_contexts": "No se encontraron contextos. Crea tu primer contexto para compartir variables de entorno entre pilas."
+    "no_contexts": "No se encontraron contextos. Crea tu primer contexto para compartir variables de entorno entre pilas.",
+    "add": "Agregar Contexto",
+    "loading": "Cargando contextos..."
   },
   "settings": {
     "title": "Configuración",
