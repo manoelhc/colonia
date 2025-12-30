@@ -2087,20 +2087,7 @@ def list_contexts_handler(request: Request, app) -> Response:
     """List all contexts."""
     try:
         with get_session() as session:
-            # Get project_id filter if provided
-            project_id = request.args.get("project_id")
-            
-            if project_id:
-                try:
-                    pid = int(project_id)
-                    statement = select(Context).where(Context.project_id == pid).order_by(Context.created_at.desc())
-                except ValueError:
-                    response = Response(json.dumps({"error": "Invalid project ID"}), status=400)
-                    response.set_header("Content-Type", "application/json")
-                    return response
-            else:
-                statement = select(Context).order_by(Context.created_at.desc())
-
+            statement = select(Context).order_by(Context.created_at.desc())
             contexts = session.exec(statement).all()
 
             # Get project names for each context
