@@ -67,10 +67,64 @@ def stacks(request: Request) -> dict:
     return {"title": "Colonia Stacks"}
 
 
-@app.template("/settings", template="settings.html.tpl")
-def settings(request: Request) -> dict:
-    """Render settings page with context data"""
-    return {"title": "Colonia Settings"}
+@app.template("/settings/ai-integration", template="settings_ai_integration.html.tpl")
+def settings_ai_integration(request: Request) -> dict:
+    """Render AI Integration settings page"""
+    return {"title": "Colonia - AI Integration"}
+
+
+@app.template("/settings/infracost", template="settings_infracost.html.tpl")
+def settings_infracost(request: Request) -> dict:
+    """Render Infracost settings page"""
+    return {"title": "Colonia - Infracost"}
+
+
+@app.template("/settings/backend-storage", template="settings_backend_storage.html.tpl")
+def settings_backend_storage(request: Request) -> dict:
+    """Render Backend Storage settings page"""
+    return {"title": "Colonia - Backend Storage"}
+
+
+@app.template("/settings/secrets-vault", template="settings_secrets_vault.html.tpl")
+def settings_secrets_vault(request: Request) -> dict:
+    """Render Secrets Vault settings page"""
+    return {"title": "Colonia - Secrets Vault"}
+
+
+@app.template("/settings/container-registry", template="settings_container_registry.html.tpl")
+def settings_container_registry(request: Request) -> dict:
+    """Render Container Registry settings page"""
+    return {"title": "Colonia - Container Registry"}
+
+
+@app.template("/settings/database-integration", template="settings_database_integration.html.tpl")
+def settings_database_integration(request: Request) -> dict:
+    """Render Database Integration settings page"""
+    return {"title": "Colonia - Database Integration"}
+
+
+@app.template("/settings/rabbitmq-integration", template="settings_rabbitmq_integration.html.tpl")
+def settings_rabbitmq_integration(request: Request) -> dict:
+    """Render RabbitMQ Integration settings page"""
+    return {"title": "Colonia - RabbitMQ Integration"}
+
+
+@app.template("/settings/redis-integration", template="settings_redis_integration.html.tpl")
+def settings_redis_integration(request: Request) -> dict:
+    """Render Redis Integration settings page"""
+    return {"title": "Colonia - Redis Integration"}
+
+
+@app.template("/settings/github-integration", template="settings_github_integration.html.tpl")
+def settings_github_integration(request: Request) -> dict:
+    """Render GitHub Integration settings page"""
+    return {"title": "Colonia - GitHub Integration"}
+
+
+@app.template("/settings/gitlab-integration", template="settings_gitlab_integration.html.tpl")
+def settings_gitlab_integration(request: Request) -> dict:
+    """Render GitLab Integration settings page"""
+    return {"title": "Colonia - GitLab Integration"}
 
 
 @app.template("/environments", template="environments.html.tpl")

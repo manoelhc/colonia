@@ -111,14 +111,29 @@
                             <span data-i18n="nav.contexts">Contexts</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="/settings" class="active">
+                    <li class="nav-dropdown">
+                        <a href="#" class="nav-dropdown-toggle">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
                             <span data-i18n="nav.settings">Settings</span>
+                            <svg class="dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </a>
+                        <ul class="nav-dropdown-menu">
+                            <li><a href="/settings/ai-integration" data-i18n="nav.settings.ai_integration">AI Integration</a></li>
+                            <li><a href="/settings/infracost" data-i18n="nav.settings.infracost">Infracost</a></li>
+                            <li><a href="/settings/backend-storage" data-i18n="nav.settings.backend_storage">Backend Storage</a></li>
+                            <li><a href="/settings/secrets-vault" data-i18n="nav.settings.secrets_vault">Secrets Vault</a></li>
+                            <li><a href="/settings/container-registry" class="active" data-i18n="nav.settings.container_registry">Container Registry</a></li>
+                            <li><a href="/settings/database-integration" data-i18n="nav.settings.database_integration">Database Integration</a></li>
+                            <li><a href="/settings/rabbitmq-integration" data-i18n="nav.settings.rabbitmq_integration">RabbitMQ Integration</a></li>
+                            <li><a href="/settings/redis-integration" data-i18n="nav.settings.redis_integration">Redis Integration</a></li>
+                            <li><a href="/settings/github-integration" data-i18n="nav.settings.github_integration">GitHub Integration</a></li>
+                            <li><a href="/settings/gitlab-integration" data-i18n="nav.settings.gitlab_integration">GitLab Integration</a></li>
+                        </ul>
                     </li>
                     <li>
                         <a href="/users">
@@ -145,7 +160,7 @@
             <!-- Top Navbar -->
             <header class="top-navbar">
                 <div class="navbar-inner">
-                    <h2 data-i18n="page.settings">Settings</h2>
+                    <h2 data-i18n="settings.container_registry.title">Container Registry</h2>
                     <div class="navbar-actions">
                         <!-- Language Selector -->
                         <select id="languageSelector">
@@ -177,19 +192,19 @@
             <!-- Content Area -->
             <main class="content-area">
                 <div class="content-wrapper">
-                    <!-- Settings Overview Card -->
+                    <!-- Settings Card -->
                     <div class="card">
-                        <h3 data-i18n="settings.title">Settings</h3>
-                        <p data-i18n="settings.description">Configure your Colonia instance and manage your preferences.</p>
+                        <h3 data-i18n="settings.container_registry.title">Container Registry</h3>
+                        <p data-i18n="settings.container_registry.description">Configure Container Registry settings and options.</p>
                     </div>
 
                     <!-- Settings Sections -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4 data-i18n="settings.general">General Settings</h4>
+                            <h4 data-i18n="settings.container_registry.configuration">Configuration</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="settings.general_description">General configuration options will appear here.</p>
+                            <p data-i18n="settings.container_registry.configuration_description">Container Registry configuration options will appear here.</p>
                         </div>
                     </div>
                 </div>
@@ -215,5 +230,6 @@
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/sidebar.js"></script>
 </body>
 </html>

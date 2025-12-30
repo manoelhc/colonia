@@ -9,7 +9,18 @@
     "stacks": "Pilhas",
     "environments": "Ambientes",
     "contexts": "Contextos",
-    "settings": "Configurações",
+    "settings": {
+      "ai_integration": "Integração de IA",
+      "infracost": "Infracost",
+      "backend_storage": "Armazenamento Backend",
+      "secrets_vault": "Cofre de Segredos",
+      "container_registry": "Registro de Contêineres",
+      "database_integration": "Integração de Banco de Dados",
+      "rabbitmq_integration": "Integração RabbitMQ",
+      "redis_integration": "Integração Redis",
+      "github_integration": "Integração GitHub",
+      "gitlab_integration": "Integração GitLab"
+    },
     "users": "Usuários",
     "teams": "Equipes"
   },
@@ -58,7 +69,67 @@
     "title": "Configurações",
     "description": "Configure sua instância Colonia e gerencie suas preferências.",
     "general": "Configurações Gerais",
-    "general_description": "As opções de configuração geral aparecerão aqui."
+    "general_description": "As opções de configuração geral aparecerão aqui.",
+    "ai_integration": {
+      "title": "Integração de IA",
+      "description": "Configure recursos e integrações com IA.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração de integração de IA aparecerão aqui."
+    },
+    "infracost": {
+      "title": "Infracost",
+      "description": "Configure as opções do Infracost.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração do Infracost aparecerão aqui."
+    },
+    "backend_storage": {
+      "title": "Armazenamento Backend",
+      "description": "Configure as opções de armazenamento backend.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração de armazenamento backend aparecerão aqui."
+    },
+    "secrets_vault": {
+      "title": "Cofre de Segredos",
+      "description": "Configure as opções do cofre de segredos.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração do cofre de segredos aparecerão aqui."
+    },
+    "container_registry": {
+      "title": "Registro de Contêineres",
+      "description": "Configure as opções do registro de contêineres.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração do registro de contêineres aparecerão aqui."
+    },
+    "database_integration": {
+      "title": "Integração de Banco de Dados",
+      "description": "Configure as opções de integração de banco de dados.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração de integração de banco de dados aparecerão aqui."
+    },
+    "rabbitmq_integration": {
+      "title": "Integração RabbitMQ",
+      "description": "Configure as opções de integração RabbitMQ.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração de integração RabbitMQ aparecerão aqui."
+    },
+    "redis_integration": {
+      "title": "Integração Redis",
+      "description": "Configure as opções de integração Redis.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração de integração Redis aparecerão aqui."
+    },
+    "github_integration": {
+      "title": "Integração GitHub",
+      "description": "Configure as opções de integração GitHub.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração de integração GitHub aparecerão aqui."
+    },
+    "gitlab_integration": {
+      "title": "Integração GitLab",
+      "description": "Configure as opções de integração GitLab.",
+      "configuration": "Configuração",
+      "configuration_description": "As opções de configuração de integração GitLab aparecerão aqui."
+    }
   },
   "users": {
     "title": "Usuários",

@@ -9,7 +9,18 @@
     "stacks": "Stacks",
     "environments": "Environments",
     "contexts": "Contexts",
-    "settings": "Settings",
+    "settings": {
+      "ai_integration": "AI Integration",
+      "infracost": "Infracost",
+      "backend_storage": "Backend Storage",
+      "secrets_vault": "Secrets Vault",
+      "container_registry": "Container Registry",
+      "database_integration": "Database Integration",
+      "rabbitmq_integration": "RabbitMQ Integration",
+      "redis_integration": "Redis Integration",
+      "github_integration": "GitHub Integration",
+      "gitlab_integration": "GitLab Integration"
+    },
     "users": "Users",
     "teams": "Teams"
   },
@@ -58,7 +69,67 @@
     "title": "Settings",
     "description": "Configure your Colonia instance and manage your preferences.",
     "general": "General Settings",
-    "general_description": "General configuration options will appear here."
+    "general_description": "General configuration options will appear here.",
+    "ai_integration": {
+      "title": "AI Integration",
+      "description": "Configure AI-powered features and integrations.",
+      "configuration": "Configuration",
+      "configuration_description": "AI integration configuration options will appear here."
+    },
+    "infracost": {
+      "title": "Infracost",
+      "description": "Configure Infracost settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "Infracost configuration options will appear here."
+    },
+    "backend_storage": {
+      "title": "Backend Storage",
+      "description": "Configure Backend Storage settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "Backend Storage configuration options will appear here."
+    },
+    "secrets_vault": {
+      "title": "Secrets Vault",
+      "description": "Configure Secrets Vault settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "Secrets Vault configuration options will appear here."
+    },
+    "container_registry": {
+      "title": "Container Registry",
+      "description": "Configure Container Registry settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "Container Registry configuration options will appear here."
+    },
+    "database_integration": {
+      "title": "Database Integration",
+      "description": "Configure Database Integration settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "Database Integration configuration options will appear here."
+    },
+    "rabbitmq_integration": {
+      "title": "RabbitMQ Integration",
+      "description": "Configure RabbitMQ Integration settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "RabbitMQ Integration configuration options will appear here."
+    },
+    "redis_integration": {
+      "title": "Redis Integration",
+      "description": "Configure Redis Integration settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "Redis Integration configuration options will appear here."
+    },
+    "github_integration": {
+      "title": "GitHub Integration",
+      "description": "Configure GitHub Integration settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "GitHub Integration configuration options will appear here."
+    },
+    "gitlab_integration": {
+      "title": "GitLab Integration",
+      "description": "Configure GitLab Integration settings and options.",
+      "configuration": "Configuration",
+      "configuration_description": "GitLab Integration configuration options will appear here."
+    }
   },
   "users": {
     "title": "Users",

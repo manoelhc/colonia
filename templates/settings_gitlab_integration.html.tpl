@@ -96,7 +96,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/environments" class="active">
+                        <a href="/environments">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
@@ -132,7 +132,7 @@
                             <li><a href="/settings/rabbitmq-integration" data-i18n="nav.settings.rabbitmq_integration">RabbitMQ Integration</a></li>
                             <li><a href="/settings/redis-integration" data-i18n="nav.settings.redis_integration">Redis Integration</a></li>
                             <li><a href="/settings/github-integration" data-i18n="nav.settings.github_integration">GitHub Integration</a></li>
-                            <li><a href="/settings/gitlab-integration" data-i18n="nav.settings.gitlab_integration">GitLab Integration</a></li>
+                            <li><a href="/settings/gitlab-integration" class="active" data-i18n="nav.settings.gitlab_integration">GitLab Integration</a></li>
                         </ul>
                     </li>
                     <li>
@@ -160,7 +160,7 @@
             <!-- Top Navbar -->
             <header class="top-navbar">
                 <div class="navbar-inner">
-                    <h2 data-i18n="page.environments">Environments</h2>
+                    <h2 data-i18n="settings.gitlab_integration.title">GitLab Integration</h2>
                     <div class="navbar-actions">
                         <!-- Language Selector -->
                         <select id="languageSelector">
@@ -192,19 +192,19 @@
             <!-- Content Area -->
             <main class="content-area">
                 <div class="content-wrapper">
-                    <!-- Environments Overview Card -->
+                    <!-- Settings Card -->
                     <div class="card">
-                        <h3 data-i18n="environments.title">Environments</h3>
-                        <p data-i18n="environments.description">Manage deployment environments for your projects. Define and organize different stages like development, staging, and production.</p>
+                        <h3 data-i18n="settings.gitlab_integration.title">GitLab Integration</h3>
+                        <p data-i18n="settings.gitlab_integration.description">Configure GitLab Integration settings and options.</p>
                     </div>
 
-                    <!-- Environments List -->
+                    <!-- Settings Sections -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4 data-i18n="environments.list">Environment List</h4>
+                            <h4 data-i18n="settings.gitlab_integration.configuration">Configuration</h4>
                         </div>
-                        <div class="activity-content" id="environmentsList">
-                            <p class="loading" data-i18n="environments.loading">Loading environments...</p>
+                        <div class="activity-content">
+                            <p data-i18n="settings.gitlab_integration.configuration_description">GitLab Integration configuration options will appear here.</p>
                         </div>
                     </div>
                 </div>
@@ -231,6 +231,5 @@
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/sidebar.js"></script>
-    <script src="/static/js/environments.js"></script>
 </body>
 </html>
