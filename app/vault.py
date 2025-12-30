@@ -1,6 +1,7 @@
 """HashiCorp Vault client utilities for Colonia."""
 
 import hvac
+import requests.exceptions
 from typing import Tuple, Optional
 
 
@@ -35,8 +36,8 @@ def test_vault_connection(vault_url: str, vault_token: str, vault_namespace: Opt
             return True, f"Connection successful! Token has policies: {', '.join(policies)}"
         except hvac.exceptions.Forbidden:
             return False, "Authentication succeeded but token has insufficient permissions to lookup self"
-        except Exception as e:
-            # Even if lookup fails, authentication worked
+        except hvac.exceptions.InvalidRequest as e:
+            # Token lookup failed but authentication worked
             return True, "Connection and authentication successful!"
             
     except hvac.exceptions.InvalidRequest as e:
@@ -45,8 +46,10 @@ def test_vault_connection(vault_url: str, vault_token: str, vault_namespace: Opt
         return False, "Authentication failed: Unauthorized access"
     except hvac.exceptions.VaultError as e:
         return False, f"Vault error: {str(e)}"
-    except ConnectionError as e:
+    except requests.exceptions.ConnectionError as e:
         return False, f"Connection error: Cannot reach Vault server at {vault_url}"
+    except requests.exceptions.RequestException as e:
+        return False, f"Request error: {str(e)}"
     except Exception as e:
         return False, f"Unexpected error: {str(e)}"
 

@@ -2,9 +2,11 @@
 
 import os
 import yaml
+import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+logger = logging.getLogger(__name__)
 
 CONFIG_FILE_PATH = "/usr/local/etc/colonia/config.yml"
 
@@ -28,7 +30,7 @@ def read_config() -> Dict[str, Any]:
                 return config if config else {}
         return {}
     except Exception as e:
-        print(f"Error reading config file: {e}")
+        logger.error(f"Error reading config file: {e}", exc_info=True)
         return {}
 
 
@@ -47,7 +49,7 @@ def write_config(config: Dict[str, Any]) -> bool:
             yaml.safe_dump(config, f, default_flow_style=False, sort_keys=False)
         return True
     except Exception as e:
-        print(f"Error writing config file: {e}")
+        logger.error(f"Error writing config file: {e}", exc_info=True)
         return False
 
 
