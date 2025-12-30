@@ -64,13 +64,17 @@
     "title": "Users",
     "description": "Manage user accounts and permissions. Control access to your Colonia instance and projects.",
     "list": "User List",
-    "no_users": "No users found. Invite users to collaborate on your projects."
+    "no_users": "No users found. Invite users to collaborate on your projects.",
+    "add": "Add User",
+    "loading": "Loading users..."
   },
   "teams": {
     "title": "Teams",
     "description": "Manage teams and group permissions. Organize users into teams for efficient access control.",
     "list": "Team List",
-    "no_teams": "No teams found. Create teams to organize users and manage permissions."
+    "no_teams": "No teams found. Create teams to organize users and manage permissions.",
+    "add": "Add Team",
+    "loading": "Loading teams..."
   },
   "stats": {
     "projects": "Projects",

@@ -179,7 +179,15 @@
                 <div class="content-wrapper">
                     <!-- Teams Overview Card -->
                     <div class="card">
-                        <h3 data-i18n="teams.title">Teams</h3>
+                        <div class="card-header">
+                            <h3 data-i18n="teams.title">Teams</h3>
+                            <button id="addTeamBtn" class="btn-primary">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span data-i18n="teams.add">Add Team</span>
+                            </button>
+                        </div>
                         <p data-i18n="teams.description">Manage teams and group permissions. Organize users into teams for efficient access control.</p>
                     </div>
 
@@ -188,8 +196,8 @@
                         <div class="activity-header">
                             <h4 data-i18n="teams.list">Team List</h4>
                         </div>
-                        <div class="activity-content">
-                            <p data-i18n="teams.no_teams">No teams found. Create teams to organize users and manage permissions.</p>
+                        <div id="teamsList" class="teams-grid">
+                            <p data-i18n="teams.loading">Loading teams...</p>
                         </div>
                     </div>
                 </div>
@@ -212,8 +220,157 @@
         </div>
     </div>
 
+    <!-- Team Modal -->
+    <div id="teamModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create Team</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="teamForm">
+                <div class="form-group">
+                    <label for="teamName">Team Name</label>
+                    <input type="text" id="teamName" name="teamName" required maxlength="255">
+                </div>
+                <div class="form-group">
+                    <label for="teamDescription">Description</label>
+                    <textarea id="teamDescription" name="teamDescription" rows="3" maxlength="1000"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Members Modal -->
+    <div id="membersModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="membersModalTitle">Manage Members</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="membersList" class="members-list">
+                    <p>Loading members...</p>
+                </div>
+                <hr>
+                <h4>Add Member</h4>
+                <form id="addMemberForm">
+                    <div class="form-group">
+                        <label for="userSelect">User</label>
+                        <select id="userSelect" name="userSelect" required>
+                            <option value="">Select a user</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberRole">Role</label>
+                        <select id="memberRole" name="memberRole" required>
+                            <option value="member">Member</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn-primary">Add Member</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Modal -->
+    <div id="permissionsModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="permissionsModalTitle">Manage Permissions</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="permissionsList" class="permissions-list">
+                    <p>Loading permissions...</p>
+                </div>
+                <hr>
+                <h4>Add Permission</h4>
+                <form id="addPermissionForm">
+                    <div class="form-group">
+                        <label for="resourceType">Resource Type</label>
+                        <select id="resourceType" name="resourceType" required>
+                            <option value="project">Project</option>
+                            <option value="environment">Environment</option>
+                            <option value="stack">Stack</option>
+                        </select>
+                    </div>
+                    <div id="projectSelectGroup" class="form-group" style="display:none;">
+                        <label for="projectSelect">Project (filter stacks)</label>
+                        <select id="projectSelect" name="projectSelect">
+                            <option value="">Select a project</option>
+                        </select>
+                    </div>
+                    <div id="environmentSelectGroup" class="form-group" style="display:none;">
+                        <label for="environmentSelect">Environment (filter stacks)</label>
+                        <select id="environmentSelect" name="environmentSelect">
+                            <option value="">Select an environment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceId">Resource</label>
+                        <select id="resourceId" name="resourceId" required>
+                            <option value="">Select a resource</option>
+                        </select>
+                    </div>
+                    <div id="allStacksGroup" class="form-group" style="display:none;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="allStacks" name="allStacks">
+                            <span>Apply to All Stacks</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canView" name="canView" checked>
+                            <span>Can View</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canPlan" name="canPlan">
+                            <span>Can Plan</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canApply" name="canApply">
+                            <span>Can Apply</span>
+                        </label>
+                    </div>
+                    <div id="dependencyPermissionsGroup" class="form-group" style="display:none;">
+                        <hr>
+                        <h5>Dependency Permissions</h5>
+                        <p style="font-size: 0.875rem; color: #6b7280;">Permissions for stacks that depend on the selected stack</p>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canViewDependencies" name="canViewDependencies">
+                            <span>Can View Dependencies</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canPlanDependencies" name="canPlanDependencies">
+                            <span>Can Plan Dependencies</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="canApplyDependencies" name="canApplyDependencies">
+                            <span>Can Apply Dependencies</span>
+                        </label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn-primary">Set Permission</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/teams.js"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
 from sqlmodel import select, func
-from models import Project, Environment, Stack, StackEnvironment
+from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
 
@@ -582,6 +582,1045 @@ def get_environments_grouped_handler(request: Request, app) -> Response:
 
     except Exception as e:
         logger.error(f"Error fetching grouped environments: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# User API Handlers
+def sanitize_email(email: str) -> Optional[str]:
+    """Validate and sanitize email input."""
+    if not email:
+        return None
+
+    email = sanitize_string(email, max_length=255)
+    
+    # Basic email validation regex
+    email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+    
+    if not email_pattern.match(email):
+        return None
+    
+    return email.lower()
+
+
+def validate_user_data(data: dict) -> tuple[bool, Optional[str]]:
+    """Validate user data."""
+    if "username" not in data or not data["username"]:
+        return False, "Username is required"
+    
+    if "email" not in data or not data["email"]:
+        return False, "Email is required"
+    
+    if "name" not in data or not data["name"]:
+        return False, "Name is required"
+    
+    username = data["username"].strip()
+    if len(username) < 3:
+        return False, "Username must be at least 3 characters"
+    if len(username) > 100:
+        return False, "Username is too long (max 100 characters)"
+    
+    if len(data["name"]) > 255:
+        return False, "Name is too long (max 255 characters)"
+    
+    if sanitize_email(data["email"]) is None:
+        return False, "Invalid email format"
+    
+    return True, None
+
+
+def create_user_handler(request: Request, app) -> Response:
+    """Create a new user."""
+    try:
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        is_valid, error_message = validate_user_data(data)
+        if not is_valid:
+            response = Response(json.dumps({"error": error_message}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        username = sanitize_string(data["username"], max_length=100).lower()
+        email = sanitize_email(data["email"])
+        name = sanitize_string(data["name"], max_length=255)
+
+        with get_session() as session:
+            # Check if username already exists
+            existing_user = session.exec(
+                select(User).where(User.username == username)
+            ).first()
+            if existing_user:
+                response = Response(
+                    json.dumps({"error": "Username already exists"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+            
+            # Check if email already exists
+            existing_email = session.exec(
+                select(User).where(User.email == email)
+            ).first()
+            if existing_email:
+                response = Response(
+                    json.dumps({"error": "Email already exists"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            user = User(username=username, email=email, name=name)
+            session.add(user)
+            session.flush()
+            session.refresh(user)
+
+            response_body = json.dumps({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "name": user.name,
+                "created_at": user.created_at.isoformat(),
+                "updated_at": user.updated_at.isoformat(),
+            })
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error creating user: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def list_users_handler(request: Request, app) -> Response:
+    """List all users."""
+    try:
+        with get_session() as session:
+            statement = select(User).order_by(User.created_at.desc())
+            users = session.exec(statement).all()
+
+            users_data = [
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "name": user.name,
+                    "created_at": user.created_at.isoformat(),
+                    "updated_at": user.updated_at.isoformat(),
+                }
+                for user in users
+            ]
+
+            response = Response(json.dumps({"users": users_data}), status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing users: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_user_handler(request: Request, app, user_id: str) -> Response:
+    """Get a single user by ID."""
+    try:
+        try:
+            uid = int(user_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid user ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            user = session.get(User, uid)
+
+            if not user:
+                response = Response(
+                    json.dumps({"error": "User not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            response_body = json.dumps({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "name": user.name,
+                "created_at": user.created_at.isoformat(),
+                "updated_at": user.updated_at.isoformat(),
+            })
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error getting user: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def update_user_handler(request: Request, app, user_id: str) -> Response:
+    """Update a user."""
+    try:
+        try:
+            uid = int(user_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid user ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        is_valid, error_message = validate_user_data(data)
+        if not is_valid:
+            response = Response(json.dumps({"error": error_message}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            user = session.get(User, uid)
+
+            if not user:
+                response = Response(
+                    json.dumps({"error": "User not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            username = sanitize_string(data["username"], max_length=100).lower()
+            email = sanitize_email(data["email"])
+            
+            # Check if username is taken by another user
+            if username != user.username:
+                existing_user = session.exec(
+                    select(User).where(User.username == username)
+                ).first()
+                if existing_user:
+                    response = Response(
+                        json.dumps({"error": "Username already exists"}), status=400
+                    )
+                    response.set_header("Content-Type", "application/json")
+                    return response
+            
+            # Check if email is taken by another user
+            if email != user.email:
+                existing_email = session.exec(
+                    select(User).where(User.email == email)
+                ).first()
+                if existing_email:
+                    response = Response(
+                        json.dumps({"error": "Email already exists"}), status=400
+                    )
+                    response.set_header("Content-Type", "application/json")
+                    return response
+
+            user.username = username
+            user.email = email
+            user.name = sanitize_string(data["name"], max_length=255)
+            user.updated_at = datetime.utcnow()
+
+            session.add(user)
+            session.flush()
+            session.refresh(user)
+
+            response_body = json.dumps({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "name": user.name,
+                "created_at": user.created_at.isoformat(),
+                "updated_at": user.updated_at.isoformat(),
+            })
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error updating user: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_user_handler(request: Request, app, user_id: str) -> Response:
+    """Delete a user and all associated team memberships."""
+    try:
+        try:
+            uid = int(user_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid user ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            user = session.get(User, uid)
+
+            if not user:
+                response = Response(
+                    json.dumps({"error": "User not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Delete all team memberships for this user first
+            team_members = session.exec(
+                select(TeamMember).where(TeamMember.user_id == uid)
+            ).all()
+            for member in team_members:
+                session.delete(member)
+
+            # Now delete the user
+            session.delete(user)
+
+            response = Response(
+                json.dumps({"message": "User deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting user: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Team API Handlers
+def validate_team_data(data: dict) -> tuple[bool, Optional[str]]:
+    """Validate team data."""
+    if "name" not in data or not data["name"]:
+        return False, "Team name is required"
+    
+    name = data["name"].strip()
+    if len(name) < 1:
+        return False, "Team name cannot be empty"
+    if len(name) > 255:
+        return False, "Team name is too long (max 255 characters)"
+    
+    if "description" in data and data["description"]:
+        if len(data["description"]) > 1000:
+            return False, "Description is too long (max 1000 characters)"
+    
+    return True, None
+
+
+def create_team_handler(request: Request, app) -> Response:
+    """Create a new team."""
+    try:
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        is_valid, error_message = validate_team_data(data)
+        if not is_valid:
+            response = Response(json.dumps({"error": error_message}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        name = sanitize_string(data["name"], max_length=255)
+        description = sanitize_string(data.get("description", ""), max_length=1000) or None
+
+        with get_session() as session:
+            # Check if team name already exists
+            existing_team = session.exec(
+                select(Team).where(Team.name == name)
+            ).first()
+            if existing_team:
+                response = Response(
+                    json.dumps({"error": "Team name already exists"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            team = Team(name=name, description=description)
+            session.add(team)
+            session.flush()
+            session.refresh(team)
+
+            response_body = json.dumps({
+                "id": team.id,
+                "name": team.name,
+                "description": team.description,
+                "created_at": team.created_at.isoformat(),
+                "updated_at": team.updated_at.isoformat(),
+            })
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error creating team: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def list_teams_handler(request: Request, app) -> Response:
+    """List all teams with their members and permissions."""
+    try:
+        with get_session() as session:
+            teams = session.exec(select(Team).order_by(Team.created_at.desc())).all()
+
+            teams_data = []
+            for team in teams:
+                # Get team members
+                members = session.exec(
+                    select(TeamMember, User)
+                    .join(User, TeamMember.user_id == User.id)
+                    .where(TeamMember.team_id == team.id)
+                ).all()
+                
+                members_data = [
+                    {
+                        "id": member.id,
+                        "user_id": user.id,
+                        "username": user.username,
+                        "name": user.name,
+                        "email": user.email,
+                        "role": member.role,
+                    }
+                    for member, user in members
+                ]
+                
+                # Get team permissions
+                permissions = session.exec(
+                    select(TeamPermission)
+                    .where(TeamPermission.team_id == team.id)
+                ).all()
+                
+                permissions_data = [
+                    {
+                        "id": perm.id,
+                        "resource_type": perm.resource_type,
+                        "resource_id": perm.resource_id,
+                        "can_view": perm.can_view,
+                        "can_plan": perm.can_plan,
+                        "can_apply": perm.can_apply,
+                        "all_stacks": perm.all_stacks,
+                        "can_view_dependencies": perm.can_view_dependencies,
+                        "can_plan_dependencies": perm.can_plan_dependencies,
+                        "can_apply_dependencies": perm.can_apply_dependencies,
+                    }
+                    for perm in permissions
+                ]
+                
+                teams_data.append({
+                    "id": team.id,
+                    "name": team.name,
+                    "description": team.description,
+                    "created_at": team.created_at.isoformat(),
+                    "updated_at": team.updated_at.isoformat(),
+                    "members": members_data,
+                    "permissions": permissions_data,
+                })
+
+            response = Response(json.dumps({"teams": teams_data}), status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing teams: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_team_handler(request: Request, app, team_id: str) -> Response:
+    """Get a single team by ID with members and permissions."""
+    try:
+        try:
+            tid = int(team_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid team ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            team = session.get(Team, tid)
+
+            if not team:
+                response = Response(
+                    json.dumps({"error": "Team not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Get team members
+            members = session.exec(
+                select(TeamMember, User)
+                .join(User, TeamMember.user_id == User.id)
+                .where(TeamMember.team_id == team.id)
+            ).all()
+            
+            members_data = [
+                {
+                    "id": member.id,
+                    "user_id": user.id,
+                    "username": user.username,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": member.role,
+                }
+                for member, user in members
+            ]
+            
+            # Get team permissions
+            permissions = session.exec(
+                select(TeamPermission)
+                .where(TeamPermission.team_id == team.id)
+            ).all()
+            
+            permissions_data = [
+                {
+                    "id": perm.id,
+                    "resource_type": perm.resource_type,
+                    "resource_id": perm.resource_id,
+                    "can_view": perm.can_view,
+                    "can_plan": perm.can_plan,
+                    "can_apply": perm.can_apply,
+                    "all_stacks": perm.all_stacks,
+                    "can_view_dependencies": perm.can_view_dependencies,
+                    "can_plan_dependencies": perm.can_plan_dependencies,
+                    "can_apply_dependencies": perm.can_apply_dependencies,
+                }
+                for perm in permissions
+            ]
+
+            response_body = json.dumps({
+                "id": team.id,
+                "name": team.name,
+                "description": team.description,
+                "created_at": team.created_at.isoformat(),
+                "updated_at": team.updated_at.isoformat(),
+                "members": members_data,
+                "permissions": permissions_data,
+            })
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error getting team: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def update_team_handler(request: Request, app, team_id: str) -> Response:
+    """Update a team."""
+    try:
+        try:
+            tid = int(team_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid team ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        is_valid, error_message = validate_team_data(data)
+        if not is_valid:
+            response = Response(json.dumps({"error": error_message}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            team = session.get(Team, tid)
+
+            if not team:
+                response = Response(
+                    json.dumps({"error": "Team not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            name = sanitize_string(data["name"], max_length=255)
+            
+            # Check if team name is taken by another team
+            if name != team.name:
+                existing_team = session.exec(
+                    select(Team).where(Team.name == name)
+                ).first()
+                if existing_team:
+                    response = Response(
+                        json.dumps({"error": "Team name already exists"}), status=400
+                    )
+                    response.set_header("Content-Type", "application/json")
+                    return response
+
+            team.name = name
+            team.description = sanitize_string(data.get("description", ""), max_length=1000) or None
+            team.updated_at = datetime.utcnow()
+
+            session.add(team)
+            session.flush()
+            session.refresh(team)
+
+            response_body = json.dumps({
+                "id": team.id,
+                "name": team.name,
+                "description": team.description,
+                "created_at": team.created_at.isoformat(),
+                "updated_at": team.updated_at.isoformat(),
+            })
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error updating team: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_team_handler(request: Request, app, team_id: str) -> Response:
+    """Delete a team and all associated members and permissions."""
+    try:
+        try:
+            tid = int(team_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid team ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            team = session.get(Team, tid)
+
+            if not team:
+                response = Response(
+                    json.dumps({"error": "Team not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Delete all team members first
+            team_members = session.exec(
+                select(TeamMember).where(TeamMember.team_id == tid)
+            ).all()
+            for member in team_members:
+                session.delete(member)
+
+            # Delete all team permissions
+            team_permissions = session.exec(
+                select(TeamPermission).where(TeamPermission.team_id == tid)
+            ).all()
+            for permission in team_permissions:
+                session.delete(permission)
+
+            # Now delete the team
+            session.delete(team)
+
+            response = Response(
+                json.dumps({"message": "Team deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting team: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def add_team_member_handler(request: Request, app, team_id: str) -> Response:
+    """Add a member to a team."""
+    try:
+        try:
+            tid = int(team_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid team ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        if "user_id" not in data:
+            response = Response(
+                json.dumps({"error": "user_id is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        try:
+            uid = int(data["user_id"])
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid user ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        role = data.get("role", "member")
+        if role not in ["member", "admin"]:
+            response = Response(
+                json.dumps({"error": "Role must be 'member' or 'admin'"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Check if team exists
+            team = session.get(Team, tid)
+            if not team:
+                response = Response(
+                    json.dumps({"error": "Team not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if user exists
+            user = session.get(User, uid)
+            if not user:
+                response = Response(
+                    json.dumps({"error": "User not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if member already exists
+            existing_member = session.exec(
+                select(TeamMember)
+                .where(TeamMember.team_id == tid)
+                .where(TeamMember.user_id == uid)
+            ).first()
+            
+            if existing_member:
+                response = Response(
+                    json.dumps({"error": "User is already a member of this team"}), 
+                    status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            member = TeamMember(team_id=tid, user_id=uid, role=role)
+            session.add(member)
+            session.flush()
+            session.refresh(member)
+
+            response_body = json.dumps({
+                "id": member.id,
+                "team_id": member.team_id,
+                "user_id": member.user_id,
+                "role": member.role,
+                "created_at": member.created_at.isoformat(),
+            })
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error adding team member: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def remove_team_member_handler(request: Request, app, team_id: str, member_id: str) -> Response:
+    """Remove a member from a team."""
+    try:
+        try:
+            tid = int(team_id)
+            mid = int(member_id)
+        except ValueError:
+            response = Response(
+                json.dumps({"error": "Invalid team or member ID"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            member = session.get(TeamMember, mid)
+
+            if not member or member.team_id != tid:
+                response = Response(
+                    json.dumps({"error": "Team member not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(member)
+
+            response = Response(
+                json.dumps({"message": "Team member removed successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error removing team member: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def set_team_permission_handler(request: Request, app, team_id: str) -> Response:
+    """Set or update a team permission."""
+    try:
+        try:
+            tid = int(team_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid team ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        
+        required_fields = ["resource_type", "resource_id"]
+        for field in required_fields:
+            if field not in data:
+                response = Response(
+                    json.dumps({"error": f"{field} is required"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+        resource_type = data["resource_type"]
+        if resource_type not in ["project", "environment", "stack"]:
+            response = Response(
+                json.dumps({"error": "resource_type must be 'project', 'environment', or 'stack'"}),
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        try:
+            resource_id = int(data["resource_id"])
+        except ValueError:
+            response = Response(
+                json.dumps({"error": "Invalid resource_id"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        can_view = data.get("can_view", True)
+        can_plan = data.get("can_plan", False)
+        can_apply = data.get("can_apply", False)
+        all_stacks = data.get("all_stacks", False)
+        can_view_dependencies = data.get("can_view_dependencies", False)
+        can_plan_dependencies = data.get("can_plan_dependencies", False)
+        can_apply_dependencies = data.get("can_apply_dependencies", False)
+
+        with get_session() as session:
+            # Check if team exists
+            team = session.get(Team, tid)
+            if not team:
+                response = Response(
+                    json.dumps({"error": "Team not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if permission already exists
+            existing_perm = session.exec(
+                select(TeamPermission)
+                .where(TeamPermission.team_id == tid)
+                .where(TeamPermission.resource_type == resource_type)
+                .where(TeamPermission.resource_id == resource_id)
+            ).first()
+            
+            if existing_perm:
+                # Update existing permission
+                existing_perm.can_view = can_view
+                existing_perm.can_plan = can_plan
+                existing_perm.can_apply = can_apply
+                existing_perm.all_stacks = all_stacks
+                existing_perm.can_view_dependencies = can_view_dependencies
+                existing_perm.can_plan_dependencies = can_plan_dependencies
+                existing_perm.can_apply_dependencies = can_apply_dependencies
+                existing_perm.updated_at = datetime.utcnow()
+                session.add(existing_perm)
+                session.flush()
+                session.refresh(existing_perm)
+                permission = existing_perm
+            else:
+                # Create new permission
+                permission = TeamPermission(
+                    team_id=tid,
+                    resource_type=resource_type,
+                    resource_id=resource_id,
+                    can_view=can_view,
+                    can_plan=can_plan,
+                    can_apply=can_apply,
+                    all_stacks=all_stacks,
+                    can_view_dependencies=can_view_dependencies,
+                    can_plan_dependencies=can_plan_dependencies,
+                    can_apply_dependencies=can_apply_dependencies
+                )
+                session.add(permission)
+                session.flush()
+                session.refresh(permission)
+
+            response_body = json.dumps({
+                "id": permission.id,
+                "team_id": permission.team_id,
+                "resource_type": permission.resource_type,
+                "resource_id": permission.resource_id,
+                "can_view": permission.can_view,
+                "can_plan": permission.can_plan,
+                "can_apply": permission.can_apply,
+                "all_stacks": permission.all_stacks,
+                "can_view_dependencies": permission.can_view_dependencies,
+                "can_plan_dependencies": permission.can_plan_dependencies,
+                "can_apply_dependencies": permission.can_apply_dependencies,
+                "created_at": permission.created_at.isoformat(),
+                "updated_at": permission.updated_at.isoformat(),
+            })
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error setting team permission: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_team_permission_handler(request: Request, app, team_id: str, permission_id: str) -> Response:
+    """Delete a team permission."""
+    try:
+        try:
+            tid = int(team_id)
+            pid = int(permission_id)
+        except ValueError:
+            response = Response(
+                json.dumps({"error": "Invalid team or permission ID"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            permission = session.get(TeamPermission, pid)
+
+            if not permission or permission.team_id != tid:
+                response = Response(
+                    json.dumps({"error": "Team permission not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(permission)
+
+            response = Response(
+                json.dumps({"message": "Team permission deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting team permission: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )
