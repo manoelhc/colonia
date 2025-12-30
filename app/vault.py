@@ -154,9 +154,6 @@ def enable_secrets_engine(
             # KV v2 uses the 'kv' type with version 2
             actual_type = 'kv'
             options = {'version': '2'}
-            if max_versions:
-                # Note: max_versions is set via configuration after mount
-                pass
         elif engine_type == 'kv':
             # KV v1
             actual_type = 'kv'

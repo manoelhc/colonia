@@ -529,7 +529,10 @@
             };
 
             if (engineType === 'kv-v2' && maxVersions) {
-                requestData.max_versions = parseInt(maxVersions);
+                const parsedMaxVersions = parseInt(maxVersions, 10);
+                if (!isNaN(parsedMaxVersions) && parsedMaxVersions > 0) {
+                    requestData.max_versions = parsedMaxVersions;
+                }
             }
 
             fetch('/api/vault/secrets-engine', {
