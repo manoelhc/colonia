@@ -2326,6 +2326,7 @@ def list_context_secrets_handler(request: Request, app, context_id: str) -> Resp
                 {
                     "id": secret.id,
                     "context_id": secret.context_id,
+                    "env_var_name": secret.env_var_name,
                     "secret_key": secret.secret_key,
                     "vault_path": secret.vault_path,
                     "created_at": secret.created_at.isoformat(),
@@ -2371,6 +2372,11 @@ def add_context_secret_handler(request: Request, app, context_id: str) -> Respon
         data = json.loads(body)
 
         # Validate required fields
+        if "env_var_name" not in data or not data["env_var_name"]:
+            response = Response(json.dumps({"error": "Environment variable name is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
         if "secret_key" not in data or not data["secret_key"]:
             response = Response(json.dumps({"error": "Secret key is required"}), status=400)
             response.set_header("Content-Type", "application/json")
@@ -2381,8 +2387,14 @@ def add_context_secret_handler(request: Request, app, context_id: str) -> Respon
             response.set_header("Content-Type", "application/json")
             return response
 
+        env_var_name = sanitize_string(data["env_var_name"], max_length=255)
         secret_key = sanitize_string(data["secret_key"], max_length=255)
         vault_path = sanitize_string(data["vault_path"], max_length=500)
+
+        if len(env_var_name) < 1:
+            response = Response(json.dumps({"error": "Environment variable name cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
 
         if len(secret_key) < 1:
             response = Response(json.dumps({"error": "Secret key cannot be empty"}), status=400)
@@ -2404,15 +2416,15 @@ def add_context_secret_handler(request: Request, app, context_id: str) -> Respon
                 response.set_header("Content-Type", "application/json")
                 return response
 
-            # Check if secret key already exists for this context
+            # Check if env_var_name already exists for this context
             statement = select(ContextSecret).where(
                 ContextSecret.context_id == cid,
-                ContextSecret.secret_key == secret_key
+                ContextSecret.env_var_name == env_var_name
             )
             existing = session.exec(statement).first()
             if existing:
                 response = Response(
-                    json.dumps({"error": "Secret key already exists for this context"}), status=400
+                    json.dumps({"error": "Environment variable name already exists for this context"}), status=400
                 )
                 response.set_header("Content-Type", "application/json")
                 return response
@@ -2420,6 +2432,7 @@ def add_context_secret_handler(request: Request, app, context_id: str) -> Respon
             # Create new context secret
             context_secret = ContextSecret(
                 context_id=cid,
+                env_var_name=env_var_name,
                 secret_key=secret_key,
                 vault_path=vault_path,
             )
@@ -2432,6 +2445,7 @@ def add_context_secret_handler(request: Request, app, context_id: str) -> Respon
                 {
                     "id": context_secret.id,
                     "context_id": context_secret.context_id,
+                    "env_var_name": context_secret.env_var_name,
                     "secret_key": context_secret.secret_key,
                     "vault_path": context_secret.vault_path,
                     "created_at": context_secret.created_at.isoformat(),

@@ -394,6 +394,7 @@
         const html = secrets.map(secret => `
             <div class="secret-item">
                 <div class="secret-info">
+                    <div class="secret-env-var">${escapeHtml(secret.env_var_name)}</div>
                     <div class="secret-key">${escapeHtml(secret.secret_key)}</div>
                     <div class="secret-path">${escapeHtml(secret.vault_path)}</div>
                 </div>
@@ -417,10 +418,16 @@
             return;
         }
 
+        const env_var_name = document.getElementById('secretEnvVarName').value.trim();
         const secret_key = document.getElementById('secretKey').value.trim();
         const vault_path = document.getElementById('secretVaultPath').value;
 
         // Client-side validation
+        if (!env_var_name) {
+            showNotification('Environment variable name is required', 'error');
+            return;
+        }
+
         if (!secret_key) {
             showNotification('Secret key is required', 'error');
             return;
@@ -431,12 +438,18 @@
             return;
         }
 
+        if (env_var_name.length > 255) {
+            showNotification('Environment variable name is too long (max 255 characters)', 'error');
+            return;
+        }
+
         if (secret_key.length > 255) {
             showNotification('Secret key is too long (max 255 characters)', 'error');
             return;
         }
 
         const data = {
+            env_var_name: env_var_name,
             secret_key: secret_key,
             vault_path: vault_path
         };

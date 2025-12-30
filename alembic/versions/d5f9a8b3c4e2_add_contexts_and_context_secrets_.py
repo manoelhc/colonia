@@ -37,6 +37,7 @@ def upgrade() -> None:
     op.create_table('context_secrets',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('context_id', sa.Integer(), nullable=False),
+    sa.Column('env_var_name', sa.String(length=255), nullable=False),
     sa.Column('secret_key', sa.String(length=255), nullable=False),
     sa.Column('vault_path', sa.String(length=500), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),

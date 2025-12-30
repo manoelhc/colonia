@@ -287,8 +287,12 @@
                 <form id="secretForm" class="secret-form">
                     <h4>Add Secret</h4>
                     <div class="form-group">
+                        <label for="secretEnvVarName">Environment Variable Name <span class="required">*</span></label>
+                        <input type="text" id="secretEnvVarName" name="env_var_name" required maxlength="255" placeholder="e.g., DB_PASSWORD">
+                    </div>
+                    <div class="form-group">
                         <label for="secretKey">Secret Key <span class="required">*</span></label>
-                        <input type="text" id="secretKey" name="secret_key" required maxlength="255" placeholder="e.g., DATABASE_PASSWORD">
+                        <input type="text" id="secretKey" name="secret_key" required maxlength="255" placeholder="e.g., database_password">
                     </div>
                     <div class="form-group">
                         <label for="secretVaultPath">Vault Path <span class="required">*</span></label>
