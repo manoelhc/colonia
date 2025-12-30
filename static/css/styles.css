@@ -1195,7 +1195,7 @@ html, body {
 .nav-dropdown-menu {
     display: none;
     list-style: none;
-    margin: 0.5rem 0 0.5rem 0;
+    margin: 0.5rem 0;
     padding-left: 2.5rem;
 }
 

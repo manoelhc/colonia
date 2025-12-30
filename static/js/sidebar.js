@@ -12,7 +12,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Expand the settings menu if we're on a settings page
     if (isSettingsPage && navDropdown) {
-        navDropdown.classList.add('open');
+        const dropdownMenu = navDropdown.querySelector('.nav-dropdown-menu');
+        if (dropdownMenu) {
+            navDropdown.classList.add('open');
+        }
     }
     
     // Add click event listeners to all dropdown toggles
