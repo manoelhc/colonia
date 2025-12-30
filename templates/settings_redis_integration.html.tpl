@@ -104,7 +104,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/contexts" class="active">
+                        <a href="/contexts">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                             </svg>
@@ -130,7 +130,7 @@
                             <li><a href="/settings/container-registry" data-i18n="nav.settings_menu.container_registry">Container Registry</a></li>
                             <li><a href="/settings/database-integration" data-i18n="nav.settings_menu.database_integration">Database Integration</a></li>
                             <li><a href="/settings/rabbitmq-integration" data-i18n="nav.settings_menu.rabbitmq_integration">RabbitMQ Integration</a></li>
-                            <li><a href="/settings/redis-integration" data-i18n="nav.settings_menu.redis_integration">Redis Integration</a></li>
+                            <li><a href="/settings/redis-integration" class="active" data-i18n="nav.settings_menu.redis_integration">Redis Integration</a></li>
                             <li><a href="/settings/github-integration" data-i18n="nav.settings_menu.github_integration">GitHub Integration</a></li>
                             <li><a href="/settings/gitlab-integration" data-i18n="nav.settings_menu.gitlab_integration">GitLab Integration</a></li>
                         </ul>
@@ -160,7 +160,7 @@
             <!-- Top Navbar -->
             <header class="top-navbar">
                 <div class="navbar-inner">
-                    <h2 data-i18n="page.contexts">Contexts</h2>
+                    <h2 data-i18n="settings.redis_integration.title">Redis Integration</h2>
                     <div class="navbar-actions">
                         <!-- Language Selector -->
                         <select id="languageSelector">
@@ -192,19 +192,19 @@
             <!-- Content Area -->
             <main class="content-area">
                 <div class="content-wrapper">
-                    <!-- Contexts Overview Card -->
+                    <!-- Settings Card -->
                     <div class="card">
-                        <h3 data-i18n="contexts.title">Contexts</h3>
-                        <p data-i18n="contexts.description">Manage shareable collections of environment variables. Contexts can be shared across multiple stacks to simplify configuration management.</p>
+                        <h3 data-i18n="settings.redis_integration.title">Redis Integration</h3>
+                        <p data-i18n="settings.redis_integration.description">Configure Redis Integration settings and options.</p>
                     </div>
 
-                    <!-- Contexts List -->
+                    <!-- Settings Sections -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4 data-i18n="contexts.list">Context List</h4>
+                            <h4 data-i18n="settings.redis_integration.configuration">Configuration</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="contexts.no_contexts">No contexts found. Create your first context to share environment variables across stacks.</p>
+                            <p data-i18n="settings.redis_integration.configuration_description">Redis Integration configuration options will appear here.</p>
                         </div>
                     </div>
                 </div>

@@ -11,7 +11,19 @@
     "contexts": "Contextos",
     "settings": "Configuración",
     "users": "Usuarios",
-    "teams": "Equipos"
+    "teams": "Equipos",
+    "settings_menu": {
+      "ai_integration": "Integración de IA",
+      "infracost": "Infracost",
+      "backend_storage": "Almacenamiento Backend",
+      "secrets_vault": "Bóveda de Secretos",
+      "container_registry": "Registro de Contenedores",
+      "database_integration": "Integración de Base de Datos",
+      "rabbitmq_integration": "Integración RabbitMQ",
+      "redis_integration": "Integración Redis",
+      "github_integration": "Integración GitHub",
+      "gitlab_integration": "Integración GitLab"
+    }
   },
   "page": {
     "dashboard": "Panel",
@@ -58,7 +70,67 @@
     "title": "Configuración",
     "description": "Configura tu instancia de Colonia y gestiona tus preferencias.",
     "general": "Configuración General",
-    "general_description": "Las opciones de configuración general aparecerán aquí."
+    "general_description": "Las opciones de configuración general aparecerán aquí.",
+    "ai_integration": {
+      "title": "Integración de IA",
+      "description": "Configure características e integraciones con IA.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de integración de IA aparecerán aquí."
+    },
+    "infracost": {
+      "title": "Infracost",
+      "description": "Configure las opciones de Infracost.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de Infracost aparecerán aquí."
+    },
+    "backend_storage": {
+      "title": "Almacenamiento Backend",
+      "description": "Configure las opciones de almacenamiento backend.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de almacenamiento backend aparecerán aquí."
+    },
+    "secrets_vault": {
+      "title": "Bóveda de Secretos",
+      "description": "Configure las opciones de la bóveda de secretos.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de la bóveda de secretos aparecerán aquí."
+    },
+    "container_registry": {
+      "title": "Registro de Contenedores",
+      "description": "Configure las opciones del registro de contenedores.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración del registro de contenedores aparecerán aquí."
+    },
+    "database_integration": {
+      "title": "Integración de Base de Datos",
+      "description": "Configure las opciones de integración de base de datos.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de integración de base de datos aparecerán aquí."
+    },
+    "rabbitmq_integration": {
+      "title": "Integración RabbitMQ",
+      "description": "Configure las opciones de integración RabbitMQ.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de integración RabbitMQ aparecerán aquí."
+    },
+    "redis_integration": {
+      "title": "Integración Redis",
+      "description": "Configure las opciones de integración Redis.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de integración Redis aparecerán aquí."
+    },
+    "github_integration": {
+      "title": "Integración GitHub",
+      "description": "Configure las opciones de integración GitHub.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de integración GitHub aparecerán aquí."
+    },
+    "gitlab_integration": {
+      "title": "Integración GitLab",
+      "description": "Configure las opciones de integración GitLab.",
+      "configuration": "Configuración",
+      "configuration_description": "Las opciones de configuración de integración GitLab aparecerán aquí."
+    }
   },
   "users": {
     "title": "Usuarios",

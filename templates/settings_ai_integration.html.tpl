@@ -104,7 +104,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/contexts" class="active">
+                        <a href="/contexts">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                             </svg>
@@ -123,7 +123,7 @@
                             </svg>
                         </a>
                         <ul class="nav-dropdown-menu">
-                            <li><a href="/settings/ai-integration" data-i18n="nav.settings_menu.ai_integration">AI Integration</a></li>
+                            <li><a href="/settings/ai-integration" class="active" data-i18n="nav.settings_menu.ai_integration">AI Integration</a></li>
                             <li><a href="/settings/infracost" data-i18n="nav.settings_menu.infracost">Infracost</a></li>
                             <li><a href="/settings/backend-storage" data-i18n="nav.settings_menu.backend_storage">Backend Storage</a></li>
                             <li><a href="/settings/secrets-vault" data-i18n="nav.settings_menu.secrets_vault">Secrets Vault</a></li>
@@ -160,7 +160,7 @@
             <!-- Top Navbar -->
             <header class="top-navbar">
                 <div class="navbar-inner">
-                    <h2 data-i18n="page.contexts">Contexts</h2>
+                    <h2 data-i18n="settings.ai_integration.title">AI Integration</h2>
                     <div class="navbar-actions">
                         <!-- Language Selector -->
                         <select id="languageSelector">
@@ -192,19 +192,19 @@
             <!-- Content Area -->
             <main class="content-area">
                 <div class="content-wrapper">
-                    <!-- Contexts Overview Card -->
+                    <!-- AI Integration Card -->
                     <div class="card">
-                        <h3 data-i18n="contexts.title">Contexts</h3>
-                        <p data-i18n="contexts.description">Manage shareable collections of environment variables. Contexts can be shared across multiple stacks to simplify configuration management.</p>
+                        <h3 data-i18n="settings.ai_integration.title">AI Integration</h3>
+                        <p data-i18n="settings.ai_integration.description">Configure AI-powered features and integrations.</p>
                     </div>
 
-                    <!-- Contexts List -->
+                    <!-- Settings Sections -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4 data-i18n="contexts.list">Context List</h4>
+                            <h4 data-i18n="settings.ai_integration.configuration">Configuration</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="contexts.no_contexts">No contexts found. Create your first context to share environment variables across stacks.</p>
+                            <p data-i18n="settings.ai_integration.configuration_description">AI integration configuration options will appear here.</p>
                         </div>
                     </div>
                 </div>
