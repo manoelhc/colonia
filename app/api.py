@@ -883,7 +883,7 @@ def update_user_handler(request: Request, app, user_id: str) -> Response:
 
 
 def delete_user_handler(request: Request, app, user_id: str) -> Response:
-    """Delete a user."""
+    """Delete a user and all associated team memberships."""
     try:
         try:
             uid = int(user_id)
@@ -902,6 +902,14 @@ def delete_user_handler(request: Request, app, user_id: str) -> Response:
                 response.set_header("Content-Type", "application/json")
                 return response
 
+            # Delete all team memberships for this user first
+            team_members = session.exec(
+                select(TeamMember).where(TeamMember.user_id == uid)
+            ).all()
+            for member in team_members:
+                session.delete(member)
+
+            # Now delete the user
             session.delete(user)
 
             response = Response(
@@ -1243,7 +1251,7 @@ def update_team_handler(request: Request, app, team_id: str) -> Response:
 
 
 def delete_team_handler(request: Request, app, team_id: str) -> Response:
-    """Delete a team."""
+    """Delete a team and all associated members and permissions."""
     try:
         try:
             tid = int(team_id)
@@ -1262,6 +1270,21 @@ def delete_team_handler(request: Request, app, team_id: str) -> Response:
                 response.set_header("Content-Type", "application/json")
                 return response
 
+            # Delete all team members first
+            team_members = session.exec(
+                select(TeamMember).where(TeamMember.team_id == tid)
+            ).all()
+            for member in team_members:
+                session.delete(member)
+
+            # Delete all team permissions
+            team_permissions = session.exec(
+                select(TeamPermission).where(TeamPermission.team_id == tid)
+            ).all()
+            for permission in team_permissions:
+                session.delete(permission)
+
+            # Now delete the team
             session.delete(team)
 
             response = Response(
