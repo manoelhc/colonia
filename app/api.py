@@ -2291,12 +2291,7 @@ def delete_context_handler(request: Request, app, context_id: str) -> Response:
                 response.set_header("Content-Type", "application/json")
                 return response
 
-            # Delete all associated secrets first
-            statement = select(ContextSecret).where(ContextSecret.context_id == cid)
-            secrets = session.exec(statement).all()
-            for secret in secrets:
-                session.delete(secret)
-
+            # CASCADE will handle deleting associated secrets automatically
             session.delete(context)
 
             response = Response(

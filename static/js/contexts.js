@@ -374,7 +374,7 @@
             }
 
             const data = await response.json();
-            renderContextSecrets(data.secrets || []);
+            renderContextSecrets(data.secrets || [], contextId);
         } catch (error) {
             console.error('Error loading secrets:', error);
             showNotification('Failed to load secrets', 'error');
@@ -382,7 +382,7 @@
     }
 
     // Render context secrets
-    function renderContextSecrets(secrets) {
+    function renderContextSecrets(secrets, contextId) {
         const container = document.getElementById('secretsList');
         if (!container) return;
 
@@ -397,7 +397,7 @@
                     <div class="secret-key">${escapeHtml(secret.secret_key)}</div>
                     <div class="secret-path">${escapeHtml(secret.vault_path)}</div>
                 </div>
-                <button class="btn-icon" onclick="contextsModule.deleteSecret(${parseInt(currentContextIdForSecrets)}, ${parseInt(secret.id)})" title="Delete">
+                <button class="btn-icon" onclick="contextsModule.deleteSecret(${parseInt(contextId)}, ${parseInt(secret.id)})" title="Delete">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>

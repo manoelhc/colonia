@@ -28,7 +28,7 @@ def upgrade() -> None:
     sa.Column('project_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ),
+    sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_contexts_name'), 'contexts', ['name'], unique=False)
@@ -41,7 +41,7 @@ def upgrade() -> None:
     sa.Column('vault_path', sa.String(length=500), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['context_id'], ['contexts.id'], ),
+    sa.ForeignKeyConstraint(['context_id'], ['contexts.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_context_secrets_context_id'), 'context_secrets', ['context_id'], unique=False)
