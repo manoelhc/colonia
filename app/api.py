@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
 from sqlmodel import select, func
-from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission, Context, ContextSecret
+from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission, Context, ContextSecret, ContextEnvVar
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
 from app.config import get_vault_config, set_vault_config
@@ -2512,6 +2512,215 @@ def delete_context_secret_handler(request: Request, app, context_id: str, secret
 
     except Exception as e:
         logger.error(f"Error deleting context secret: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Context Environment Variable API Handlers
+def list_context_env_vars_handler(request: Request, app, context_id: str) -> Response:
+    """List all environment variables for a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Get all env vars for this context
+            statement = select(ContextEnvVar).where(ContextEnvVar.context_id == cid).order_by(ContextEnvVar.created_at.desc())
+            env_vars = session.exec(statement).all()
+
+            env_vars_data = [
+                {
+                    "id": env_var.id,
+                    "context_id": env_var.context_id,
+                    "key": env_var.key,
+                    "value": env_var.value,
+                    "created_at": env_var.created_at.isoformat(),
+                    "updated_at": env_var.updated_at.isoformat(),
+                }
+                for env_var in env_vars
+            ]
+
+            response_body = json.dumps({"env_vars": env_vars_data})
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing context env vars: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def add_context_env_var_handler(request: Request, app, context_id: str) -> Response:
+    """Add an environment variable to a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Parse request body
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate required fields
+        if "key" not in data or not data["key"]:
+            response = Response(json.dumps({"error": "Key is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if "value" not in data or not data["value"]:
+            response = Response(json.dumps({"error": "Value is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        key = sanitize_string(data["key"], max_length=255)
+        value = sanitize_string(data["value"], max_length=1000)
+
+        if len(key) < 1:
+            response = Response(json.dumps({"error": "Key cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if len(value) < 1:
+            response = Response(json.dumps({"error": "Value cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if key already exists for this context
+            statement = select(ContextEnvVar).where(
+                ContextEnvVar.context_id == cid,
+                ContextEnvVar.key == key
+            )
+            existing = session.exec(statement).first()
+            if existing:
+                response = Response(
+                    json.dumps({"error": "Environment variable key already exists for this context"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Create new context env var
+            context_env_var = ContextEnvVar(
+                context_id=cid,
+                key=key,
+                value=value,
+            )
+
+            session.add(context_env_var)
+            session.flush()
+            session.refresh(context_env_var)
+
+            response_body = json.dumps(
+                {
+                    "id": context_env_var.id,
+                    "context_id": context_env_var.context_id,
+                    "key": context_env_var.key,
+                    "value": context_env_var.value,
+                    "created_at": context_env_var.created_at.isoformat(),
+                    "updated_at": context_env_var.updated_at.isoformat(),
+                }
+            )
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error adding context env var: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_context_env_var_handler(request: Request, app, context_id: str, env_var_id: str) -> Response:
+    """Delete an environment variable from a context."""
+    try:
+        # Validate IDs are integers
+        try:
+            cid = int(context_id)
+            eid = int(env_var_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Get the env var
+            env_var = session.get(ContextEnvVar, eid)
+
+            if not env_var:
+                response = Response(
+                    json.dumps({"error": "Environment variable not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify the env var belongs to the specified context
+            if env_var.context_id != cid:
+                response = Response(
+                    json.dumps({"error": "Environment variable does not belong to this context"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(env_var)
+
+            response = Response(
+                json.dumps({"message": "Environment variable deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting context env var: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )

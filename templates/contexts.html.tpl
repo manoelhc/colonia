@@ -312,6 +312,41 @@
         </div>
     </div>
 
+    <!-- Environment Variables Drawer -->
+    <div id="envVarsDrawer" class="drawer">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3>Environment Variables for <span id="envVarsDrawerContextName"></span></h3>
+                <button id="envVarsDrawerClose" class="modal-close" type="button">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <!-- Add Env Var Form -->
+                <form id="envVarForm" class="secret-form">
+                    <h4>Add Environment Variable</h4>
+                    <div class="form-group">
+                        <label for="envVarKey">Key <span class="required">*</span></label>
+                        <input type="text" id="envVarKey" name="key" required maxlength="255" placeholder="e.g., NODE_ENV">
+                    </div>
+                    <div class="form-group">
+                        <label for="envVarValue">Value <span class="required">*</span></label>
+                        <input type="text" id="envVarValue" name="value" required maxlength="1000" placeholder="e.g., production">
+                    </div>
+                    <button type="submit" class="btn-primary">Add Environment Variable</button>
+                </form>
+
+                <!-- Env Vars List -->
+                <div class="secrets-section">
+                    <h4>Configured Environment Variables</h4>
+                    <div id="envVarsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>

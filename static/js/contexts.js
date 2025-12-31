@@ -5,6 +5,7 @@
     let vaultPaths = [];
     let editingContextId = null;
     let currentContextIdForSecrets = null;
+    let currentContextIdForEnvVars = null;
 
     // Initialize when DOM is ready
     function init() {
@@ -25,13 +26,23 @@
         // Modal close buttons
         const closeButtons = document.querySelectorAll('.modal-close');
         closeButtons.forEach(btn => {
-            btn.addEventListener('click', closeModal);
+            btn.addEventListener('click', function() {
+                closeModal();
+                closeSecretsDrawer();
+                closeEnvVarsDrawer();
+            });
         });
 
         // Drawer close button
         const drawerClose = document.getElementById('drawerClose');
         if (drawerClose) {
             drawerClose.addEventListener('click', closeSecretsDrawer);
+        }
+
+        // Env vars drawer close button
+        const envVarsDrawerClose = document.getElementById('envVarsDrawerClose');
+        if (envVarsDrawerClose) {
+            envVarsDrawerClose.addEventListener('click', closeEnvVarsDrawer);
         }
 
         // Modal backdrop click
@@ -54,6 +65,16 @@
             });
         }
 
+        // Env vars drawer backdrop click
+        const envVarsDrawer = document.getElementById('envVarsDrawer');
+        if (envVarsDrawer) {
+            envVarsDrawer.addEventListener('click', function(e) {
+                if (e.target === envVarsDrawer) {
+                    closeEnvVarsDrawer();
+                }
+            });
+        }
+
         // Context form submission
         const contextForm = document.getElementById('contextForm');
         if (contextForm) {
@@ -64,6 +85,12 @@
         const secretForm = document.getElementById('secretForm');
         if (secretForm) {
             secretForm.addEventListener('submit', handleSecretFormSubmit);
+        }
+
+        // Env var form submission
+        const envVarForm = document.getElementById('envVarForm');
+        if (envVarForm) {
+            envVarForm.addEventListener('submit', handleEnvVarFormSubmit);
         }
     }
 
@@ -181,6 +208,11 @@
                 <div class="context-card-header">
                     <h4>${escapeHtml(context.name)}</h4>
                     <div class="context-actions">
+                        <button class="btn-icon" onclick="contextsModule.openEnvVarsDrawer(${parseInt(context.id)})" title="Environment Variables">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </button>
                         <button class="btn-icon" onclick="contextsModule.openSecretsDrawer(${parseInt(context.id)})" title="Set Secrets">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
@@ -509,6 +541,172 @@
         }
     }
 
+    // Open environment variables drawer
+    async function openEnvVarsDrawer(contextId) {
+        currentContextIdForEnvVars = contextId;
+        const context = contexts.find(c => c.id === contextId);
+        
+        if (!context) return;
+
+        document.getElementById('envVarsDrawerContextName').textContent = context.name;
+        document.getElementById('envVarsDrawer').classList.add('show');
+        
+        // Clear and reset the form
+        document.getElementById('envVarForm').reset();
+        
+        // Load env vars for this context
+        await loadContextEnvVars(contextId);
+    }
+
+    // Close environment variables drawer
+    function closeEnvVarsDrawer() {
+        document.getElementById('envVarsDrawer').classList.remove('show');
+        document.getElementById('envVarForm').reset();
+        currentContextIdForEnvVars = null;
+    }
+
+    // Load context environment variables
+    async function loadContextEnvVars(contextId) {
+        try {
+            const response = await fetch(`/api/contexts/${contextId}/env-vars`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load environment variables');
+            }
+
+            const data = await response.json();
+            renderContextEnvVars(data.env_vars || [], contextId);
+        } catch (error) {
+            console.error('Error loading env vars:', error);
+            showNotification('Failed to load environment variables', 'error');
+        }
+    }
+
+    // Render context environment variables
+    function renderContextEnvVars(envVars, contextId) {
+        const container = document.getElementById('envVarsList');
+        if (!container) return;
+
+        if (envVars.length === 0) {
+            container.innerHTML = '<p class="no-data">No environment variables configured for this context.</p>';
+            return;
+        }
+
+        const html = envVars.map(envVar => `
+            <div class="secret-item">
+                <div class="secret-info">
+                    <div class="secret-env-var">${escapeHtml(envVar.key)}</div>
+                    <div class="secret-path">${escapeHtml(envVar.value)}</div>
+                </div>
+                <button class="btn-icon" onclick="contextsModule.deleteEnvVar(${parseInt(contextId)}, ${parseInt(envVar.id)})" title="Delete">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        `).join('');
+
+        container.innerHTML = html;
+    }
+
+    // Handle env var form submission
+    async function handleEnvVarFormSubmit(e) {
+        e.preventDefault();
+
+        if (!currentContextIdForEnvVars) {
+            showNotification('No context selected', 'error');
+            return;
+        }
+
+        const key = document.getElementById('envVarKey').value.trim();
+        const value = document.getElementById('envVarValue').value.trim();
+
+        // Client-side validation
+        if (!key) {
+            showNotification('Key is required', 'error');
+            return;
+        }
+
+        if (!value) {
+            showNotification('Value is required', 'error');
+            return;
+        }
+
+        if (key.length > 255) {
+            showNotification('Key is too long (max 255 characters)', 'error');
+            return;
+        }
+
+        if (value.length > 1000) {
+            showNotification('Value is too long (max 1000 characters)', 'error');
+            return;
+        }
+
+        const data = {
+            key: key,
+            value: value
+        };
+
+        try {
+            const response = await fetch(`/api/contexts/${currentContextIdForEnvVars}/env-vars`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to add environment variable');
+            }
+
+            showNotification('Environment variable added successfully', 'success');
+            
+            // Reset form
+            document.getElementById('envVarForm').reset();
+            
+            // Reload env vars
+            await loadContextEnvVars(currentContextIdForEnvVars);
+        } catch (error) {
+            console.error('Error adding env var:', error);
+            showNotification(error.message || 'Failed to add environment variable', 'error');
+        }
+    }
+
+    // Delete environment variable
+    async function deleteEnvVar(contextId, envVarId) {
+        if (!confirm('Are you sure you want to delete this environment variable?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/contexts/${contextId}/env-vars/${envVarId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const result = await response.json();
+                throw new Error(result.error || 'Failed to delete environment variable');
+            }
+
+            showNotification('Environment variable deleted successfully', 'success');
+            await loadContextEnvVars(contextId);
+        } catch (error) {
+            console.error('Error deleting env var:', error);
+            showNotification(error.message || 'Failed to delete environment variable', 'error');
+        }
+    }
+
     // Show notification
     function showNotification(message, type = 'info') {
         // Create notification element
@@ -557,7 +755,9 @@
         editContext: openEditModal,
         deleteContext: deleteContext,
         openSecretsDrawer: openSecretsDrawer,
-        deleteSecret: deleteSecret
+        deleteSecret: deleteSecret,
+        openEnvVarsDrawer: openEnvVarsDrawer,
+        deleteEnvVar: deleteEnvVar
     };
 
     // Initialize when DOM is ready

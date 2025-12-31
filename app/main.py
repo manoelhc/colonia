@@ -37,6 +37,9 @@ from app.api import (
     list_context_secrets_handler,
     add_context_secret_handler,
     delete_context_secret_handler,
+    list_context_env_vars_handler,
+    add_context_env_var_handler,
+    delete_context_env_var_handler,
 )
 
 app = Rupy()
@@ -340,6 +343,21 @@ def api_context_secrets(request: Request, context_id: str) -> Response:
 def api_context_secret(request: Request, context_id: str, secret_id: str) -> Response:
     """Handle single context secret API endpoint."""
     return delete_context_secret_handler(request, app, context_id, secret_id)
+
+
+@app.route("/api/contexts/<context_id>/env-vars", methods=["GET", "POST"])
+def api_context_env_vars(request: Request, context_id: str) -> Response:
+    """Handle context environment variables API endpoint."""
+    if request.method == "POST":
+        return add_context_env_var_handler(request, app, context_id)
+    else:  # GET
+        return list_context_env_vars_handler(request, app, context_id)
+
+
+@app.route("/api/contexts/<context_id>/env-vars/<env_var_id>", methods=["DELETE"])
+def api_context_env_var(request: Request, context_id: str, env_var_id: str) -> Response:
+    """Handle single context environment variable API endpoint."""
+    return delete_context_env_var_handler(request, app, context_id, env_var_id)
 
 
 def main():
