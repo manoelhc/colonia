@@ -146,7 +146,12 @@
 
             const data = await response.json();
             // Extract paths from secrets engines
-            vaultPaths = Object.keys(data.secrets_engines || {}).map(path => path.replace(/\/$/, ''));
+            if (data.engines && data.engines.length > 0) {
+                vaultPaths = data.engines.map(engine => engine.path.replace(/\/$/, ''));
+            } else {
+                // Default to some common paths if no engines configured
+                vaultPaths = ['colonia', 'secret', 'kv'];
+            }
             renderVaultPathOptions();
         } catch (error) {
             console.error('Error loading vault paths:', error);
