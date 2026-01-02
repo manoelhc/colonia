@@ -1,4 +1,8 @@
-"""HashiCorp Vault client utilities for Colonia."""
+"""OpenBao/Vault client utilities for Colonia.
+
+OpenBao is an open-source fork of HashiCorp Vault that maintains API compatibility.
+This module works with both OpenBao and HashiCorp Vault.
+"""
 
 import hvac
 import requests.exceptions
@@ -6,18 +10,18 @@ from typing import Tuple, Optional
 
 
 def test_vault_connection(vault_url: str, vault_token: str, vault_namespace: Optional[str] = None) -> Tuple[bool, str]:
-    """Test connection and authentication to HashiCorp Vault.
+    """Test connection and authentication to OpenBao/Vault server.
     
     Args:
-        vault_url: The URL of the Vault server (e.g., http://localhost:8200)
-        vault_token: The authentication token for Vault
-        vault_namespace: Optional namespace for Vault Enterprise
+        vault_url: The URL of the OpenBao/Vault server (e.g., http://localhost:8200)
+        vault_token: The authentication token
+        vault_namespace: Optional namespace (Vault Enterprise feature)
         
     Returns:
         Tuple of (success: bool, message: str)
     """
     try:
-        # Create Vault client
+        # Create client (works with both OpenBao and Vault)
         client = hvac.Client(
             url=vault_url,
             token=vault_token,
@@ -45,9 +49,9 @@ def test_vault_connection(vault_url: str, vault_token: str, vault_namespace: Opt
     except hvac.exceptions.Unauthorized:
         return False, "Authentication failed: Unauthorized access"
     except hvac.exceptions.VaultError as e:
-        return False, f"Vault error: {str(e)}"
+        return False, f"Server error: {str(e)}"
     except requests.exceptions.ConnectionError as e:
-        return False, f"Connection error: Cannot reach Vault server at {vault_url}"
+        return False, f"Connection error: Cannot reach server at {vault_url}"
     except requests.exceptions.RequestException as e:
         return False, f"Request error: {str(e)}"
     except Exception as e:
@@ -55,15 +59,15 @@ def test_vault_connection(vault_url: str, vault_token: str, vault_namespace: Opt
 
 
 def get_vault_client(vault_url: str, vault_token: str, vault_namespace: Optional[str] = None) -> Optional[hvac.Client]:
-    """Get an authenticated Vault client.
+    """Get an authenticated OpenBao/Vault client.
     
     Args:
-        vault_url: The URL of the Vault server
-        vault_token: The authentication token for Vault
-        vault_namespace: Optional namespace for Vault Enterprise
+        vault_url: The URL of the OpenBao/Vault server
+        vault_token: The authentication token
+        vault_namespace: Optional namespace (Vault Enterprise feature)
         
     Returns:
-        Authenticated Vault client or None if connection fails
+        Authenticated client or None if connection fails
     """
     try:
         client = hvac.Client(
@@ -80,12 +84,12 @@ def get_vault_client(vault_url: str, vault_token: str, vault_namespace: Optional
 
 
 def list_secrets_engines(vault_url: str, vault_token: str, vault_namespace: Optional[str] = None) -> Tuple[bool, any]:
-    """List all mounted secrets engines in Vault.
+    """List all mounted secrets engines in OpenBao/Vault.
     
     Args:
-        vault_url: The URL of the Vault server
-        vault_token: The authentication token for Vault
-        vault_namespace: Optional namespace for Vault Enterprise
+        vault_url: The URL of the OpenBao/Vault server
+        vault_token: The authentication token
+        vault_namespace: Optional namespace (Vault Enterprise feature)
         
     Returns:
         Tuple of (success: bool, data: dict or error message)
@@ -93,7 +97,7 @@ def list_secrets_engines(vault_url: str, vault_token: str, vault_namespace: Opti
     try:
         client = get_vault_client(vault_url, vault_token, vault_namespace)
         if not client:
-            return False, "Failed to authenticate with Vault"
+            return False, "Failed to authenticate with server"
         
         # List mounted secrets engines
         secrets_engines = client.sys.list_mounted_secrets_engines()
@@ -113,9 +117,9 @@ def list_secrets_engines(vault_url: str, vault_token: str, vault_namespace: Opti
     except hvac.exceptions.Forbidden:
         return False, "Insufficient permissions to list secrets engines"
     except hvac.exceptions.VaultError as e:
-        return False, f"Vault error: {str(e)}"
+        return False, f"Server error: {str(e)}"
     except requests.exceptions.ConnectionError:
-        return False, f"Connection error: Cannot reach Vault server at {vault_url}"
+        return False, f"Connection error: Cannot reach server at {vault_url}"
     except Exception as e:
         return False, f"Unexpected error: {str(e)}"
 
@@ -131,11 +135,11 @@ def enable_secrets_engine(
     """Enable a secrets engine at the specified path.
     
     Args:
-        vault_url: The URL of the Vault server
-        vault_token: The authentication token for Vault
+        vault_url: The URL of the OpenBao/Vault server
+        vault_token: The authentication token
         engine_type: Type of secrets engine (kv, kv-v2)
         path: Path where the secrets engine will be mounted
-        vault_namespace: Optional namespace for Vault Enterprise
+        vault_namespace: Optional namespace (Vault Enterprise feature)
         max_versions: Maximum number of versions to keep (KV v2 only)
         
     Returns:
@@ -144,7 +148,7 @@ def enable_secrets_engine(
     try:
         client = get_vault_client(vault_url, vault_token, vault_namespace)
         if not client:
-            return False, "Failed to authenticate with Vault"
+            return False, "Failed to authenticate with server"
         
         # Prepare options based on engine type
         options = {}
@@ -190,8 +194,8 @@ def enable_secrets_engine(
     except hvac.exceptions.Forbidden:
         return False, "Insufficient permissions to enable secrets engine"
     except hvac.exceptions.VaultError as e:
-        return False, f"Vault error: {str(e)}"
+        return False, f"Server error: {str(e)}"
     except requests.exceptions.ConnectionError:
-        return False, f"Connection error: Cannot reach Vault server at {vault_url}"
+        return False, f"Connection error: Cannot reach server at {vault_url}"
     except Exception as e:
         return False, f"Unexpected error: {str(e)}"

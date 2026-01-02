@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
 from sqlmodel import select, func
-from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission
+from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission, Context, ContextSecret, ContextEnvVar
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
 from app.config import get_vault_config, set_vault_config
@@ -1973,6 +1973,754 @@ def enable_secrets_engine_handler(request: Request, app) -> Response:
         return response
     except Exception as e:
         logger.error(f"Error enabling secrets engine: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Context API Handlers
+def validate_context_data(data: dict) -> tuple[bool, Optional[str]]:
+    """Validate context data."""
+    # Check required fields
+    if "name" not in data or not data["name"]:
+        return False, "Context name is required"
+
+    if "project_id" not in data:
+        return False, "Project ID is required"
+
+    # Validate name length
+    name = data["name"].strip()
+    if len(name) < 1:
+        return False, "Context name cannot be empty"
+    if len(name) > 255:
+        return False, "Context name is too long (max 255 characters)"
+
+    # Validate description length if provided
+    if "description" in data and data["description"]:
+        if len(data["description"]) > 1000:
+            return False, "Description is too long (max 1000 characters)"
+
+    # Validate project_id is an integer
+    try:
+        int(data["project_id"])
+    except (ValueError, TypeError):
+        return False, "Invalid project ID"
+
+    return True, None
+
+
+def create_context_handler(request: Request, app) -> Response:
+    """Create a new context."""
+    try:
+        # Parse request body
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate input data
+        is_valid, error_message = validate_context_data(data)
+        if not is_valid:
+            response = Response(json.dumps({"error": error_message}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify project exists
+            project_id = int(data["project_id"])
+            project = session.get(Project, project_id)
+            if not project:
+                response = Response(
+                    json.dumps({"error": "Project not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Create new context
+            context = Context(
+                name=sanitize_string(data["name"], max_length=255),
+                description=sanitize_string(data.get("description", ""), max_length=1000) or None,
+                project_id=project_id,
+            )
+
+            session.add(context)
+            session.flush()
+            session.refresh(context)
+
+            response_body = json.dumps(
+                {
+                    "id": context.id,
+                    "name": context.name,
+                    "description": context.description,
+                    "project_id": context.project_id,
+                    "created_at": context.created_at.isoformat(),
+                    "updated_at": context.updated_at.isoformat(),
+                }
+            )
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error creating context: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def list_contexts_handler(request: Request, app) -> Response:
+    """List all contexts."""
+    try:
+        with get_session() as session:
+            statement = select(Context).order_by(Context.created_at.desc())
+            contexts = session.exec(statement).all()
+
+            # Get project names for each context
+            contexts_data = []
+            for context in contexts:
+                project = session.get(Project, context.project_id)
+                contexts_data.append({
+                    "id": context.id,
+                    "name": context.name,
+                    "description": context.description,
+                    "project_id": context.project_id,
+                    "project_name": project.name if project else "Unknown",
+                    "created_at": context.created_at.isoformat(),
+                    "updated_at": context.updated_at.isoformat(),
+                })
+
+            response_body = json.dumps({"contexts": contexts_data})
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing contexts: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_context_handler(request: Request, app, context_id: str) -> Response:
+    """Get a single context by ID."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            context = session.get(Context, cid)
+
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Get project name
+            project = session.get(Project, context.project_id)
+
+            response_body = json.dumps(
+                {
+                    "id": context.id,
+                    "name": context.name,
+                    "description": context.description,
+                    "project_id": context.project_id,
+                    "project_name": project.name if project else "Unknown",
+                    "created_at": context.created_at.isoformat(),
+                    "updated_at": context.updated_at.isoformat(),
+                }
+            )
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error getting context: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def update_context_handler(request: Request, app, context_id: str) -> Response:
+    """Update a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Parse request body
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate input data
+        is_valid, error_message = validate_context_data(data)
+        if not is_valid:
+            response = Response(json.dumps({"error": error_message}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            context = session.get(Context, cid)
+
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify project exists if changing project
+            project_id = int(data["project_id"])
+            project = session.get(Project, project_id)
+            if not project:
+                response = Response(
+                    json.dumps({"error": "Project not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Update fields
+            context.name = sanitize_string(data["name"], max_length=255)
+            context.description = (
+                sanitize_string(data.get("description", ""), max_length=1000) or None
+            )
+            context.project_id = project_id
+            context.updated_at = datetime.utcnow()
+
+            session.add(context)
+            session.flush()
+            session.refresh(context)
+
+            response_body = json.dumps(
+                {
+                    "id": context.id,
+                    "name": context.name,
+                    "description": context.description,
+                    "project_id": context.project_id,
+                    "project_name": project.name,
+                    "created_at": context.created_at.isoformat(),
+                    "updated_at": context.updated_at.isoformat(),
+                }
+            )
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error updating context: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_context_handler(request: Request, app, context_id: str) -> Response:
+    """Delete a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            context = session.get(Context, cid)
+
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # CASCADE will handle deleting associated secrets automatically
+            session.delete(context)
+
+            response = Response(
+                json.dumps({"message": "Context deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting context: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Context Secret API Handlers
+def list_context_secrets_handler(request: Request, app, context_id: str) -> Response:
+    """List all secrets for a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Get all secrets for this context
+            statement = select(ContextSecret).where(ContextSecret.context_id == cid).order_by(ContextSecret.created_at.desc())
+            secrets = session.exec(statement).all()
+
+            secrets_data = [
+                {
+                    "id": secret.id,
+                    "context_id": secret.context_id,
+                    "env_var_name": secret.env_var_name,
+                    "secret_key": secret.secret_key,
+                    "vault_path": secret.vault_path,
+                    "created_at": secret.created_at.isoformat(),
+                    "updated_at": secret.updated_at.isoformat(),
+                }
+                for secret in secrets
+            ]
+
+            response_body = json.dumps({"secrets": secrets_data})
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing context secrets: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def add_context_secret_handler(request: Request, app, context_id: str) -> Response:
+    """Add a secret to a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Parse request body
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate required fields
+        if "env_var_name" not in data or not data["env_var_name"]:
+            response = Response(json.dumps({"error": "Environment variable name is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if "secret_key" not in data or not data["secret_key"]:
+            response = Response(json.dumps({"error": "Secret key is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if "vault_path" not in data or not data["vault_path"]:
+            response = Response(json.dumps({"error": "Vault path is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        env_var_name = sanitize_string(data["env_var_name"], max_length=255)
+        secret_key = sanitize_string(data["secret_key"], max_length=255)
+        vault_path = sanitize_string(data["vault_path"], max_length=500)
+
+        if len(env_var_name) < 1:
+            response = Response(json.dumps({"error": "Environment variable name cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if len(secret_key) < 1:
+            response = Response(json.dumps({"error": "Secret key cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if len(vault_path) < 1:
+            response = Response(json.dumps({"error": "Vault path cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if env_var_name already exists for this context
+            statement = select(ContextSecret).where(
+                ContextSecret.context_id == cid,
+                ContextSecret.env_var_name == env_var_name
+            )
+            existing = session.exec(statement).first()
+            if existing:
+                response = Response(
+                    json.dumps({"error": "Environment variable name already exists for this context"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Create new context secret
+            context_secret = ContextSecret(
+                context_id=cid,
+                env_var_name=env_var_name,
+                secret_key=secret_key,
+                vault_path=vault_path,
+            )
+
+            session.add(context_secret)
+            session.flush()
+            session.refresh(context_secret)
+
+            response_body = json.dumps(
+                {
+                    "id": context_secret.id,
+                    "context_id": context_secret.context_id,
+                    "env_var_name": context_secret.env_var_name,
+                    "secret_key": context_secret.secret_key,
+                    "vault_path": context_secret.vault_path,
+                    "created_at": context_secret.created_at.isoformat(),
+                    "updated_at": context_secret.updated_at.isoformat(),
+                }
+            )
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error adding context secret: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_context_secret_handler(request: Request, app, context_id: str, secret_id: str) -> Response:
+    """Delete a secret from a context."""
+    try:
+        # Validate IDs are integers
+        try:
+            cid = int(context_id)
+            sid = int(secret_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Get the secret
+            secret = session.get(ContextSecret, sid)
+
+            if not secret:
+                response = Response(
+                    json.dumps({"error": "Secret not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify the secret belongs to the specified context
+            if secret.context_id != cid:
+                response = Response(
+                    json.dumps({"error": "Secret does not belong to this context"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(secret)
+
+            response = Response(
+                json.dumps({"message": "Secret deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting context secret: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Context Environment Variable API Handlers
+def list_context_env_vars_handler(request: Request, app, context_id: str) -> Response:
+    """List all environment variables for a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Get all env vars for this context
+            statement = select(ContextEnvVar).where(ContextEnvVar.context_id == cid).order_by(ContextEnvVar.created_at.desc())
+            env_vars = session.exec(statement).all()
+
+            env_vars_data = [
+                {
+                    "id": env_var.id,
+                    "context_id": env_var.context_id,
+                    "key": env_var.key,
+                    "value": env_var.value,
+                    "created_at": env_var.created_at.isoformat(),
+                    "updated_at": env_var.updated_at.isoformat(),
+                }
+                for env_var in env_vars
+            ]
+
+            response_body = json.dumps({"env_vars": env_vars_data})
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing context env vars: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def add_context_env_var_handler(request: Request, app, context_id: str) -> Response:
+    """Add an environment variable to a context."""
+    try:
+        # Validate context_id is an integer
+        try:
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Parse request body
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate required fields
+        if "key" not in data or not data["key"]:
+            response = Response(json.dumps({"error": "Key is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if "value" not in data or not data["value"]:
+            response = Response(json.dumps({"error": "Value is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        key = sanitize_string(data["key"], max_length=255)
+        value = sanitize_string(data["value"], max_length=1000)
+
+        if len(key) < 1:
+            response = Response(json.dumps({"error": "Key cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        if len(value) < 1:
+            response = Response(json.dumps({"error": "Value cannot be empty"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if key already exists for this context
+            statement = select(ContextEnvVar).where(
+                ContextEnvVar.context_id == cid,
+                ContextEnvVar.key == key
+            )
+            existing = session.exec(statement).first()
+            if existing:
+                response = Response(
+                    json.dumps({"error": "Environment variable key already exists for this context"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Create new context env var
+            context_env_var = ContextEnvVar(
+                context_id=cid,
+                key=key,
+                value=value,
+            )
+
+            session.add(context_env_var)
+            session.flush()
+            session.refresh(context_env_var)
+
+            response_body = json.dumps(
+                {
+                    "id": context_env_var.id,
+                    "context_id": context_env_var.context_id,
+                    "key": context_env_var.key,
+                    "value": context_env_var.value,
+                    "created_at": context_env_var.created_at.isoformat(),
+                    "updated_at": context_env_var.updated_at.isoformat(),
+                }
+            )
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error adding context env var: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_context_env_var_handler(request: Request, app, context_id: str, env_var_id: str) -> Response:
+    """Delete an environment variable from a context."""
+    try:
+        # Validate IDs are integers
+        try:
+            cid = int(context_id)
+            eid = int(env_var_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Get the env var
+            env_var = session.get(ContextEnvVar, eid)
+
+            if not env_var:
+                response = Response(
+                    json.dumps({"error": "Environment variable not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify the env var belongs to the specified context
+            if env_var.context_id != cid:
+                response = Response(
+                    json.dumps({"error": "Environment variable does not belong to this context"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(env_var)
+
+            response = Response(
+                json.dumps({"message": "Environment variable deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting context env var: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )
