@@ -40,6 +40,12 @@ from app.api import (
     list_context_env_vars_handler,
     add_context_env_var_handler,
     delete_context_env_var_handler,
+    attach_context_to_stack_handler,
+    detach_context_from_stack_handler,
+    list_stack_contexts_handler,
+    attach_context_to_environment_handler,
+    detach_context_from_environment_handler,
+    list_environment_contexts_handler,
 )
 
 app = Rupy()
@@ -358,6 +364,38 @@ def api_context_env_vars(request: Request, context_id: str) -> Response:
 def api_context_env_var(request: Request, context_id: str, env_var_id: str) -> Response:
     """Handle single context environment variable API endpoint."""
     return delete_context_env_var_handler(request, app, context_id, env_var_id)
+
+
+# Stack Context API Routes
+@app.route("/api/stacks/<stack_id>/contexts", methods=["GET", "POST"])
+def api_stack_contexts(request: Request, stack_id: str) -> Response:
+    """Handle stack contexts API endpoint."""
+    if request.method == "POST":
+        return attach_context_to_stack_handler(request, app, stack_id)
+    else:  # GET
+        return list_stack_contexts_handler(request, app, stack_id)
+
+
+@app.route("/api/stacks/<stack_id>/contexts/<context_id>", methods=["DELETE"])
+def api_stack_context(request: Request, stack_id: str, context_id: str) -> Response:
+    """Handle single stack context API endpoint."""
+    return detach_context_from_stack_handler(request, app, stack_id, context_id)
+
+
+# Environment Context API Routes
+@app.route("/api/environments/<environment_id>/contexts", methods=["GET", "POST"])
+def api_environment_contexts(request: Request, environment_id: str) -> Response:
+    """Handle environment contexts API endpoint."""
+    if request.method == "POST":
+        return attach_context_to_environment_handler(request, app, environment_id)
+    else:  # GET
+        return list_environment_contexts_handler(request, app, environment_id)
+
+
+@app.route("/api/environments/<environment_id>/contexts/<context_id>", methods=["DELETE"])
+def api_environment_context(request: Request, environment_id: str, context_id: str) -> Response:
+    """Handle single environment context API endpoint."""
+    return detach_context_from_environment_handler(request, app, environment_id, context_id)
 
 
 def main():

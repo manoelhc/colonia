@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 from rupy import Request, Response
 from sqlmodel import select, func
-from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission, Context, ContextSecret, ContextEnvVar
+from models import Project, Environment, Stack, StackEnvironment, User, Team, TeamMember, TeamPermission, Context, ContextSecret, ContextEnvVar, ContextStack, ContextEnvironment
 from app.database import get_session
 from app.rabbitmq import send_project_scan_message
 from app.config import get_vault_config, set_vault_config
@@ -2721,6 +2721,458 @@ def delete_context_env_var_handler(request: Request, app, context_id: str, env_v
 
     except Exception as e:
         logger.error(f"Error deleting context env var: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Stack Context API Handlers
+def attach_context_to_stack_handler(request: Request, app, stack_id: str) -> Response:
+    """Attach a context to a stack."""
+    try:
+        # Validate stack_id is an integer
+        try:
+            sid = int(stack_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid stack ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Parse request body
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate required fields
+        if "context_id" not in data:
+            response = Response(json.dumps({"error": "context_id is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        try:
+            cid = int(data["context_id"])
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify stack exists
+            stack = session.get(Stack, sid)
+            if not stack:
+                response = Response(
+                    json.dumps({"error": "Stack not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if context and stack belong to the same project
+            if context.project_id != stack.project_id:
+                response = Response(
+                    json.dumps({"error": "Context and stack must belong to the same project"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if relationship already exists
+            existing = session.exec(
+                select(ContextStack)
+                .where(ContextStack.context_id == cid)
+                .where(ContextStack.stack_id == sid)
+            ).first()
+            
+            if existing:
+                response = Response(
+                    json.dumps({"error": "Context is already attached to this stack"}), 
+                    status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Create new relationship
+            context_stack = ContextStack(context_id=cid, stack_id=sid)
+            session.add(context_stack)
+            session.flush()
+
+            response = Response(
+                json.dumps({"message": "Context attached to stack successfully"}), status=201
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error attaching context to stack: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def detach_context_from_stack_handler(request: Request, app, stack_id: str, context_id: str) -> Response:
+    """Detach a context from a stack."""
+    try:
+        # Validate IDs are integers
+        try:
+            sid = int(stack_id)
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Check if relationship exists
+            context_stack = session.exec(
+                select(ContextStack)
+                .where(ContextStack.context_id == cid)
+                .where(ContextStack.stack_id == sid)
+            ).first()
+            
+            if not context_stack:
+                response = Response(
+                    json.dumps({"error": "Context is not attached to this stack"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(context_stack)
+
+            response = Response(
+                json.dumps({"message": "Context detached from stack successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error detaching context from stack: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def list_stack_contexts_handler(request: Request, app, stack_id: str) -> Response:
+    """List all contexts for a stack (both direct and inherited from environment)."""
+    try:
+        # Validate stack_id is an integer
+        try:
+            sid = int(stack_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid stack ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify stack exists
+            stack = session.get(Stack, sid)
+            if not stack:
+                response = Response(
+                    json.dumps({"error": "Stack not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Get direct contexts attached to the stack
+            direct_context_ids = session.exec(
+                select(ContextStack.context_id)
+                .where(ContextStack.stack_id == sid)
+            ).all()
+
+            direct_contexts = []
+            if direct_context_ids:
+                direct_contexts = session.exec(
+                    select(Context)
+                    .where(Context.id.in_(direct_context_ids))
+                    .order_by(Context.name)
+                ).all()
+
+            # Get contexts from environments associated with this stack
+            env_ids = session.exec(
+                select(StackEnvironment.environment_id)
+                .where(StackEnvironment.stack_id == sid)
+            ).all()
+
+            inherited_contexts = []
+            if env_ids:
+                inherited_context_ids = session.exec(
+                    select(ContextEnvironment.context_id)
+                    .where(ContextEnvironment.environment_id.in_(env_ids))
+                ).all()
+
+                if inherited_context_ids:
+                    inherited_contexts = session.exec(
+                        select(Context)
+                        .where(Context.id.in_(inherited_context_ids))
+                        .order_by(Context.name)
+                    ).all()
+
+            # Format response
+            direct_contexts_data = [
+                {
+                    "id": context.id,
+                    "name": context.name,
+                    "description": context.description,
+                    "project_id": context.project_id,
+                    "source": "stack"
+                }
+                for context in direct_contexts
+            ]
+
+            inherited_contexts_data = [
+                {
+                    "id": context.id,
+                    "name": context.name,
+                    "description": context.description,
+                    "project_id": context.project_id,
+                    "source": "environment"
+                }
+                for context in inherited_contexts
+                if context.id not in [c.id for c in direct_contexts]  # Avoid duplicates
+            ]
+
+            response_body = json.dumps({
+                "direct_contexts": direct_contexts_data,
+                "inherited_contexts": inherited_contexts_data
+            })
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing stack contexts: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+# Environment Context API Handlers
+def attach_context_to_environment_handler(request: Request, app, environment_id: str) -> Response:
+    """Attach a context to an environment."""
+    try:
+        # Validate environment_id is an integer
+        try:
+            eid = int(environment_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid environment ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Parse request body
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate required fields
+        if "context_id" not in data:
+            response = Response(json.dumps({"error": "context_id is required"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        try:
+            cid = int(data["context_id"])
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid context ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify environment exists
+            environment = session.get(Environment, eid)
+            if not environment:
+                response = Response(
+                    json.dumps({"error": "Environment not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify context exists
+            context = session.get(Context, cid)
+            if not context:
+                response = Response(
+                    json.dumps({"error": "Context not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if context and environment belong to the same project
+            if context.project_id != environment.project_id:
+                response = Response(
+                    json.dumps({"error": "Context and environment must belong to the same project"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Check if relationship already exists
+            existing = session.exec(
+                select(ContextEnvironment)
+                .where(ContextEnvironment.context_id == cid)
+                .where(ContextEnvironment.environment_id == eid)
+            ).first()
+            
+            if existing:
+                response = Response(
+                    json.dumps({"error": "Context is already attached to this environment"}), 
+                    status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Create new relationship
+            context_environment = ContextEnvironment(context_id=cid, environment_id=eid)
+            session.add(context_environment)
+            session.flush()
+
+            response = Response(
+                json.dumps({"message": "Context attached to environment successfully"}), status=201
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error attaching context to environment: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def detach_context_from_environment_handler(request: Request, app, environment_id: str, context_id: str) -> Response:
+    """Detach a context from an environment."""
+    try:
+        # Validate IDs are integers
+        try:
+            eid = int(environment_id)
+            cid = int(context_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Check if relationship exists
+            context_environment = session.exec(
+                select(ContextEnvironment)
+                .where(ContextEnvironment.context_id == cid)
+                .where(ContextEnvironment.environment_id == eid)
+            ).first()
+            
+            if not context_environment:
+                response = Response(
+                    json.dumps({"error": "Context is not attached to this environment"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(context_environment)
+
+            response = Response(
+                json.dumps({"message": "Context detached from environment successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error detaching context from environment: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def list_environment_contexts_handler(request: Request, app, environment_id: str) -> Response:
+    """List all contexts for an environment."""
+    try:
+        # Validate environment_id is an integer
+        try:
+            eid = int(environment_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid environment ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            # Verify environment exists
+            environment = session.get(Environment, eid)
+            if not environment:
+                response = Response(
+                    json.dumps({"error": "Environment not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Get contexts attached to the environment
+            context_ids = session.exec(
+                select(ContextEnvironment.context_id)
+                .where(ContextEnvironment.environment_id == eid)
+            ).all()
+
+            contexts = []
+            if context_ids:
+                contexts = session.exec(
+                    select(Context)
+                    .where(Context.id.in_(context_ids))
+                    .order_by(Context.name)
+                ).all()
+
+            # Format response
+            contexts_data = [
+                {
+                    "id": context.id,
+                    "name": context.name,
+                    "description": context.description,
+                    "project_id": context.project_id,
+                }
+                for context in contexts
+            ]
+
+            response_body = json.dumps({"contexts": contexts_data})
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing environment contexts: {e}", exc_info=True)
         response = Response(
             json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
         )
