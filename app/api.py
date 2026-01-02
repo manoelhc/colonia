@@ -495,6 +495,44 @@ def get_stacks_grouped_handler(request: Request, app) -> Response:
                 # Create a mapping of stack_id to stack object
                 stacks_by_id = {stack.id: stack for stack in project_stacks}
                 
+                # Fetch context-stack relationships for all stacks
+                stack_context_relationships = session.exec(
+                    select(ContextStack)
+                    .where(ContextStack.stack_id.in_([s.id for s in project_stacks]))
+                ).all()
+                stack_context_map = {}
+                for rel in stack_context_relationships:
+                    if rel.stack_id not in stack_context_map:
+                        stack_context_map[rel.stack_id] = []
+                    stack_context_map[rel.stack_id].append(rel.context_id)
+                
+                # Fetch context-environment relationships for all environments
+                env_ids = [e.id for e in environments]
+                env_context_relationships = session.exec(
+                    select(ContextEnvironment)
+                    .where(ContextEnvironment.environment_id.in_(env_ids))
+                ).all()
+                env_context_map = {}
+                for rel in env_context_relationships:
+                    if rel.environment_id not in env_context_map:
+                        env_context_map[rel.environment_id] = []
+                    env_context_map[rel.environment_id].append(rel.context_id)
+                
+                # Fetch all contexts for this project
+                all_context_ids = set()
+                for context_ids in stack_context_map.values():
+                    all_context_ids.update(context_ids)
+                for context_ids in env_context_map.values():
+                    all_context_ids.update(context_ids)
+                
+                contexts_by_id = {}
+                if all_context_ids:
+                    contexts = session.exec(
+                        select(Context)
+                        .where(Context.id.in_(list(all_context_ids)))
+                    ).all()
+                    contexts_by_id = {c.id: c for c in contexts}
+                
                 project_data = {
                     "id": project.id,
                     "name": project.name,
@@ -506,21 +544,42 @@ def get_stacks_grouped_handler(request: Request, app) -> Response:
                     stack_ids = env_to_stacks.get(environment.id, [])
                     stacks = [stacks_by_id[sid] for sid in stack_ids if sid in stacks_by_id]
                     
-                    stacks_data = [
+                    # Get environment contexts
+                    env_context_ids = env_context_map.get(environment.id, [])
+                    env_contexts = [
                         {
+                            "id": contexts_by_id[cid].id,
+                            "name": contexts_by_id[cid].name,
+                        }
+                        for cid in env_context_ids if cid in contexts_by_id
+                    ]
+                    
+                    stacks_data = []
+                    for stack in stacks:
+                        # Get stack-specific contexts
+                        stack_context_ids = stack_context_map.get(stack.id, [])
+                        stack_contexts = [
+                            {
+                                "id": contexts_by_id[cid].id,
+                                "name": contexts_by_id[cid].name,
+                            }
+                            for cid in stack_context_ids if cid in contexts_by_id
+                        ]
+                        
+                        stacks_data.append({
                             "id": stack.id,
                             "name": stack.name,
                             "stack_id": stack.stack_id,
                             "stack_path": stack.stack_path,
                             "depends_on": stack.depends_on or [],
-                        }
-                        for stack in stacks
-                    ]
+                            "contexts": stack_contexts,
+                        })
                     
                     if stacks_data:
                         project_data["environments"].append({
                             "id": environment.id,
                             "name": environment.name,
+                            "contexts": env_contexts,
                             "stacks": stacks_data
                         })
                 
@@ -559,16 +618,51 @@ def get_environments_grouped_handler(request: Request, app) -> Response:
                 ).all()
                 
                 if environments:
-                    environments_data = [
-                        {
+                    # Fetch context-environment relationships
+                    env_ids = [e.id for e in environments]
+                    env_context_relationships = session.exec(
+                        select(ContextEnvironment)
+                        .where(ContextEnvironment.environment_id.in_(env_ids))
+                    ).all()
+                    env_context_map = {}
+                    for rel in env_context_relationships:
+                        if rel.environment_id not in env_context_map:
+                            env_context_map[rel.environment_id] = []
+                        env_context_map[rel.environment_id].append(rel.context_id)
+                    
+                    # Fetch all contexts
+                    all_context_ids = set()
+                    for context_ids in env_context_map.values():
+                        all_context_ids.update(context_ids)
+                    
+                    contexts_by_id = {}
+                    if all_context_ids:
+                        contexts = session.exec(
+                            select(Context)
+                            .where(Context.id.in_(list(all_context_ids)))
+                        ).all()
+                        contexts_by_id = {c.id: c for c in contexts}
+                    
+                    environments_data = []
+                    for environment in environments:
+                        # Get environment contexts
+                        env_context_ids = env_context_map.get(environment.id, [])
+                        env_contexts = [
+                            {
+                                "id": contexts_by_id[cid].id,
+                                "name": contexts_by_id[cid].name,
+                            }
+                            for cid in env_context_ids if cid in contexts_by_id
+                        ]
+                        
+                        environments_data.append({
                             "id": environment.id,
                             "name": environment.name,
                             "directory": environment.directory,
                             "created_at": environment.created_at.isoformat(),
                             "updated_at": environment.updated_at.isoformat(),
-                        }
-                        for environment in environments
-                    ]
+                            "contexts": env_contexts,
+                        })
                     
                     result.append({
                         "id": project.id,
