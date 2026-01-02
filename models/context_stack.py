@@ -8,5 +8,5 @@ class ContextStack(SQLModel, table=True):
 
     __tablename__ = "context_stacks"
 
-    context_id: int = Field(foreign_key="contexts.id", primary_key=True)
-    stack_id: int = Field(foreign_key="stacks.id", primary_key=True)
+    context_id: int = Field(foreign_key="contexts.id", primary_key=True, ondelete="CASCADE")
+    stack_id: int = Field(foreign_key="stacks.id", primary_key=True, ondelete="CASCADE")

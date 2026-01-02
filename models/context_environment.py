@@ -8,5 +8,5 @@ class ContextEnvironment(SQLModel, table=True):
 
     __tablename__ = "context_environments"
 
-    context_id: int = Field(foreign_key="contexts.id", primary_key=True)
-    environment_id: int = Field(foreign_key="environments.id", primary_key=True)
+    context_id: int = Field(foreign_key="contexts.id", primary_key=True, ondelete="CASCADE")
+    environment_id: int = Field(foreign_key="environments.id", primary_key=True, ondelete="CASCADE")
