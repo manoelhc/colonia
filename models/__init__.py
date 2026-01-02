@@ -11,6 +11,8 @@ from .team_permission import TeamPermission
 from .context import Context
 from .context_secret import ContextSecret
 from .context_env_var import ContextEnvVar
+from .context_stack import ContextStack
+from .context_environment import ContextEnvironment
 
 __all__ = [
     "Project",
@@ -24,4 +26,6 @@ __all__ = [
     "Context",
     "ContextSecret",
     "ContextEnvVar",
+    "ContextStack",
+    "ContextEnvironment",
 ]

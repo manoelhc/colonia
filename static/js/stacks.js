@@ -71,6 +71,7 @@
     function renderStackCard(stack, stacksById, depth = 0) {
         const stackObj = stacksById[stack.stack_id] || stack;
         const hasDependents = stackObj.dependents && stackObj.dependents.length > 0;
+        const hasContexts = stack.contexts && stack.contexts.length > 0;
         
         let html = `
             <div class="stack-card ${hasDependents ? 'has-dependents' : ''}" style="margin-left: ${depth * 1.5}rem;">
@@ -83,6 +84,11 @@
                     <div class="stack-info">
                         <div class="stack-name">${escapeHtml(stack.name)}</div>
                         ${stack.stack_id ? `<div class="stack-id">${escapeHtml(stack.stack_id)}</div>` : ''}
+                        ${hasContexts ? `
+                            <div class="stack-contexts">
+                                ${stack.contexts.map(ctx => `<span class="context-badge">${escapeHtml(ctx.name)}</span>`).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
         `;
@@ -135,13 +141,23 @@
                     return;
                 }
 
+                const hasEnvContexts = environment.contexts && environment.contexts.length > 0;
+
                 html += `
                     <div class="environment-group">
                         <div class="environment-header">
                             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <h4>${escapeHtml(environment.name)}</h4>
+                            <div class="environment-header-content">
+                                <h4>${escapeHtml(environment.name)}</h4>
+                                ${hasEnvContexts ? `
+                                    <div class="environment-contexts">
+                                        <span class="contexts-label">Shared Contexts:</span>
+                                        ${environment.contexts.map(ctx => `<span class="context-badge environment-context">${escapeHtml(ctx.name)}</span>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                         <div class="stacks-tree">
                 `;

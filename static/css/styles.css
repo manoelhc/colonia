@@ -1497,3 +1497,46 @@ html, body {
 .dark .context-card:hover {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
+
+/* Context badges */
+.context-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.25rem 0.25rem 0 0;
+    background-color: var(--accent-purple);
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.context-badge.environment-context {
+    background-color: var(--accent-blue);
+}
+
+.stack-contexts,
+.environment-contexts {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.contexts-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+    display: inline-block;
+    line-height: 1.75rem;
+}
+
+.environment-header-content {
+    flex: 1;
+}
+
+.dark .context-badge {
+    background-color: var(--accent-purple);
+}
+
+.dark .context-badge.environment-context {
+    background-color: var(--accent-blue);
+}
