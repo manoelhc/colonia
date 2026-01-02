@@ -60,6 +60,7 @@
                 `;
                 
                 project.environments.forEach(environment => {
+                    const hasContexts = environment.contexts && environment.contexts.length > 0;
                     html += `
                         <div class="environment-card">
                             <div class="environment-header">
@@ -71,6 +72,11 @@
                                 <div class="environment-info">
                                     <div class="environment-name">${escapeHtml(environment.name)}</div>
                                     <div class="environment-directory">${escapeHtml(environment.directory)}</div>
+                                    ${hasContexts ? `
+                                        <div class="environment-contexts">
+                                            ${environment.contexts.map(ctx => `<span class="context-badge">${escapeHtml(ctx.name)}</span>`).join('')}
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                             <div class="environment-footer">
