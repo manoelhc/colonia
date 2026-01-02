@@ -195,7 +195,7 @@
                     <!-- Settings Card -->
                     <div class="card">
                         <h3 data-i18n="settings.secrets_vault.title">Secrets Vault</h3>
-                        <p data-i18n="settings.secrets_vault.description">Configure your HashiCorp Vault integration for secure secret management.</p>
+                        <p data-i18n="settings.secrets_vault.description">Configure your OpenBao/Vault integration for secure secret management.</p>
                     </div>
 
                     <!-- Settings Form -->
@@ -214,7 +214,7 @@
                                         placeholder="http://localhost:8200"
                                         required
                                     />
-                                    <small>The URL of your HashiCorp Vault server (e.g., http://localhost:8200)</small>
+                                    <small>The URL of your OpenBao/Vault server (e.g., http://localhost:8200)</small>
                                 </div>
 
                                 <div class="form-group">
