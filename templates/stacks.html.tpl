@@ -291,6 +291,7 @@
                         }
 
                         // Reload page to show updated contexts
+                        // Note: Could be improved with dynamic update instead of full reload
                         window.location.reload();
                     } catch (error) {
                         console.error('Error attaching context:', error);

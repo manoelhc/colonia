@@ -327,41 +327,6 @@
         selectedEnvironmentId = null;
     }
 
-    // Handle attach context form submission
-    async function handleAttachContext(e) {
-        e.preventDefault();
-        
-        const contextId = document.getElementById('contextSelect').value;
-        if (!contextId) {
-            alert('Please select a context');
-            return;
-        }
-
-        try {
-            const url = selectedStackId 
-                ? `/api/stacks/${selectedStackId}/contexts`
-                : `/api/environments/${selectedEnvironmentId}/contexts`;
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ context_id: parseInt(contextId) })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Failed to attach context');
-            }
-
-            // Reload stacks to show updated contexts
-            await loadStacks();
-            closeContextModal();
-        } catch (error) {
-            console.error('Error attaching context:', error);
-            alert('Failed to attach context: ' + error.message);
-        }
-    }
-
     // Remove context from stack
     async function removeStackContext(stackId, contextId) {
         if (!confirm('Are you sure you want to remove this context from the stack?')) {
