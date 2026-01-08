@@ -3272,3 +3272,421 @@ def list_environment_contexts_handler(request: Request, app, environment_id: str
         )
         response.set_header("Content-Type", "application/json")
         return response
+
+
+# Backend Storage API Handlers
+def list_backend_storages_handler(request: Request, app) -> Response:
+    """List all backend storage configurations."""
+    try:
+        with get_session() as session:
+            from models import BackendStorage
+            statement = select(BackendStorage).order_by(BackendStorage.created_at.desc())
+            storages = session.exec(statement).all()
+
+            storages_data = [
+                {
+                    "id": storage.id,
+                    "name": storage.name,
+                    "endpoint_url": storage.endpoint_url,
+                    "bucket_name": storage.bucket_name,
+                    "region": storage.region,
+                    "vault_path": storage.vault_path,
+                    "access_key_field": storage.access_key_field,
+                    "secret_key_field": storage.secret_key_field,
+                    "created_at": storage.created_at.isoformat(),
+                    "updated_at": storage.updated_at.isoformat(),
+                }
+                for storage in storages
+            ]
+
+            response_body = json.dumps({"storages": storages_data})
+            response = Response(response_body, status=200)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error listing backend storages: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def create_backend_storage_handler(request: Request, app) -> Response:
+    """Create a new backend storage configuration."""
+    try:
+        # Check if Vault is configured
+        vault_config = get_vault_config()
+        if not vault_config:
+            response = Response(
+                json.dumps({"error": "Vault must be configured before adding backend storage"}),
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate required fields - credentials should already be in Vault
+        required_fields = ["name", "endpoint_url", "bucket_name", "vault_path"]
+        for field in required_fields:
+            if field not in data or not data[field]:
+                response = Response(
+                    json.dumps({"error": f"{field} is required"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+        # Sanitize inputs
+        name = sanitize_string(data["name"], max_length=255)
+        endpoint_url = sanitize_url(data["endpoint_url"])
+        if not endpoint_url:
+            response = Response(
+                json.dumps({"error": "Invalid endpoint URL format"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        bucket_name = sanitize_string(data["bucket_name"], max_length=255)
+        region = sanitize_string(data.get("region", "us-east-1"), max_length=100)
+        vault_path = sanitize_string(data["vault_path"], max_length=500)
+        access_key_field = sanitize_string(data.get("access_key_field", "access_key"), max_length=255)
+        secret_key_field = sanitize_string(data.get("secret_key_field", "secret_key"), max_length=255)
+
+        # Verify credentials exist in Vault before creating storage config
+        from app.backend_storage import get_credentials_from_vault
+        access_key, secret_key, error = get_credentials_from_vault(
+            vault_path, access_key_field, secret_key_field
+        )
+        if error:
+            response = Response(
+                json.dumps({"error": f"Credentials not found in Vault at path '{vault_path}': {error}. Please ensure credentials are stored in Vault before configuring backend storage."}),
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Create backend storage configuration
+        with get_session() as session:
+            from models import BackendStorage
+            
+            # Check if name already exists
+            existing = session.exec(
+                select(BackendStorage).where(BackendStorage.name == name)
+            ).first()
+            if existing:
+                response = Response(
+                    json.dumps({"error": "Backend storage with this name already exists"}),
+                    status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            storage = BackendStorage(
+                name=name,
+                endpoint_url=endpoint_url,
+                bucket_name=bucket_name,
+                region=region,
+                vault_path=vault_path,
+                access_key_field=access_key_field,
+                secret_key_field=secret_key_field,
+            )
+            session.add(storage)
+            session.flush()
+            session.refresh(storage)
+
+            response_body = json.dumps(
+                {
+                    "id": storage.id,
+                    "name": storage.name,
+                    "endpoint_url": storage.endpoint_url,
+                    "bucket_name": storage.bucket_name,
+                    "region": storage.region,
+                    "vault_path": storage.vault_path,
+                    "access_key_field": storage.access_key_field,
+                    "secret_key_field": storage.secret_key_field,
+                    "created_at": storage.created_at.isoformat(),
+                    "updated_at": storage.updated_at.isoformat(),
+                }
+            )
+            response = Response(response_body, status=201)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error creating backend storage: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def test_backend_storage_handler(request: Request, app) -> Response:
+    """Test backend storage connection by performing CRUD operations."""
+    try:
+        # Check if Vault is configured
+        vault_config = get_vault_config()
+        if not vault_config:
+            response = Response(
+                json.dumps({"error": "Vault must be configured before testing backend storage"}),
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+
+        # Validate required fields
+        required_fields = ["endpoint_url", "bucket_name", "vault_path", "access_key_field", "secret_key_field"]
+        for field in required_fields:
+            if field not in data or not data[field]:
+                response = Response(
+                    json.dumps({"error": f"{field} is required"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+        endpoint_url = sanitize_url(data["endpoint_url"])
+        if not endpoint_url:
+            response = Response(
+                json.dumps({"error": "Invalid endpoint URL format"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        bucket_name = sanitize_string(data["bucket_name"], max_length=255)
+        region = sanitize_string(data.get("region", "us-east-1"), max_length=100)
+        vault_path = sanitize_string(data["vault_path"], max_length=500)
+        access_key_field = sanitize_string(data["access_key_field"], max_length=255)
+        secret_key_field = sanitize_string(data["secret_key_field"], max_length=255)
+
+        # Get credentials from Vault
+        from app.backend_storage import get_credentials_from_vault, test_s3_connection
+        access_key, secret_key, error = get_credentials_from_vault(
+            vault_path, access_key_field, secret_key_field
+        )
+        
+        if error:
+            response = Response(
+                json.dumps({"error": f"Failed to retrieve credentials from Vault: {error}"}),
+                status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        # Test S3 connection
+        success, test_results = test_s3_connection(
+            endpoint_url, bucket_name, access_key, secret_key, region
+        )
+
+        response_body = json.dumps({
+            "success": success,
+            "results": test_results
+        })
+        response = Response(response_body, status=200)
+        response.set_header("Content-Type", "application/json")
+        return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error testing backend storage: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def delete_backend_storage_handler(request: Request, app, storage_id: str) -> Response:
+    """Delete a backend storage configuration."""
+    try:
+        try:
+            sid = int(storage_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid storage ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            from models import BackendStorage
+            storage = session.get(BackendStorage, sid)
+
+            if not storage:
+                response = Response(
+                    json.dumps({"error": "Backend storage not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            session.delete(storage)
+
+            response = Response(
+                json.dumps({"message": "Backend storage deleted successfully"}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error deleting backend storage: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def set_environment_backend_storage_handler(request: Request, app, environment_id: str) -> Response:
+    """Set backend storage for an environment."""
+    try:
+        try:
+            eid = int(environment_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid environment ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        backend_storage_id = data.get("backend_storage_id")
+
+        # Allow null to unset backend storage
+        if backend_storage_id is not None:
+            try:
+                backend_storage_id = int(backend_storage_id)
+            except ValueError:
+                response = Response(
+                    json.dumps({"error": "Invalid backend storage ID"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+        with get_session() as session:
+            from models import Environment, BackendStorage
+
+            environment = session.get(Environment, eid)
+            if not environment:
+                response = Response(
+                    json.dumps({"error": "Environment not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify backend storage exists if provided
+            if backend_storage_id is not None:
+                storage = session.get(BackendStorage, backend_storage_id)
+                if not storage:
+                    response = Response(
+                        json.dumps({"error": "Backend storage not found"}), status=404
+                    )
+                    response.set_header("Content-Type", "application/json")
+                    return response
+
+            # Update environment
+            environment.backend_storage_id = backend_storage_id
+            environment.updated_at = datetime.utcnow()
+            session.add(environment)
+
+            message = "Backend storage unset from environment" if backend_storage_id is None else "Backend storage set for environment"
+            response = Response(
+                json.dumps({"message": message}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error setting environment backend storage: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_environment_backend_storage_handler(request: Request, app, environment_id: str) -> Response:
+    """Get backend storage configuration for an environment."""
+    try:
+        try:
+            eid = int(environment_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid environment ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            from models import Environment, BackendStorage
+
+            environment = session.get(Environment, eid)
+            if not environment:
+                response = Response(
+                    json.dumps({"error": "Environment not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            backend_storage = None
+            if environment.backend_storage_id:
+                storage = session.get(BackendStorage, environment.backend_storage_id)
+                if storage:
+                    backend_storage = {
+                        "id": storage.id,
+                        "name": storage.name,
+                        "endpoint_url": storage.endpoint_url,
+                        "bucket_name": storage.bucket_name,
+                        "region": storage.region,
+                    }
+
+            response = Response(
+                json.dumps({"backend_storage": backend_storage}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error getting environment backend storage: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response

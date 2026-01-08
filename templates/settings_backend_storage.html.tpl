@@ -194,17 +194,32 @@
                 <div class="content-wrapper">
                     <!-- Settings Card -->
                     <div class="card">
-                        <h3 data-i18n="settings.backend_storage.title">Backend Storage</h3>
-                        <p data-i18n="settings.backend_storage.description">Configure Backend Storage settings and options.</p>
+                        <h3>Backend Storage</h3>
+                        <p>Configure S3-compatible backend storage for Terraform state files. Supports AWS S3, Minio, DigitalOcean Spaces, and other S3-compatible services.</p>
+                        <div id="vaultWarning" class="alert alert-warning" style="display: none; margin-top: 15px;">
+                            ⚠️ Vault must be configured before adding backend storage. Please configure Vault in <a href="/settings/secrets-vault">Settings → Secrets Vault</a>.
+                        </div>
                     </div>
 
-                    <!-- Settings Sections -->
+                    <!-- Add Backend Storage Button -->
+                    <div class="activity-section">
+                        <div class="activity-content">
+                            <button id="addBackendStorageBtn" class="btn btn-primary" style="margin-bottom: 20px;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Add a new backend storage
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Configured Backend Storages List -->
                     <div class="activity-section">
                         <div class="activity-header">
-                            <h4 data-i18n="settings.backend_storage.configuration">Configuration</h4>
+                            <h4>Configured Backend Storages</h4>
                         </div>
                         <div class="activity-content">
-                            <p data-i18n="settings.backend_storage.configuration_description">Backend Storage configuration options will appear here.</p>
+                            <div id="storagesList"></div>
                         </div>
                     </div>
                 </div>
@@ -227,9 +242,411 @@
         </div>
     </div>
 
+    <!-- Backend Storage Modal -->
+    <div id="backendStorageModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+        <div style="background-color: #ffffff; margin: 5% auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; width: 80%; max-width: 600px; color: #000000;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Add Backend Storage</h3>
+                <button id="closeModalBtn" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-primary);">&times;</button>
+            </div>
+            
+            <form id="backendStorageForm">
+                <div class="form-group">
+                    <label for="storageName">Storage Name *</label>
+                    <input 
+                        type="text" 
+                        id="storageName" 
+                        name="storageName" 
+                        placeholder="Production S3 Storage"
+                        required
+                    />
+                    <small>A descriptive name for this backend storage configuration</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="endpointUrl">Endpoint URL *</label>
+                    <input 
+                        type="text" 
+                        id="endpointUrl" 
+                        name="endpointUrl" 
+                        placeholder="https://s3.amazonaws.com or https://nyc3.digitaloceanspaces.com"
+                        required
+                    />
+                    <small>The endpoint URL for your S3-compatible service</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="bucketName">Bucket Name *</label>
+                    <input 
+                        type="text" 
+                        id="bucketName" 
+                        name="bucketName" 
+                        placeholder="terraform-state-bucket"
+                        required
+                    />
+                    <small>The name of the bucket where state files will be stored</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <input 
+                        type="text" 
+                        id="region" 
+                        name="region" 
+                        placeholder="us-east-1"
+                        value="us-east-1"
+                    />
+                    <small>AWS region or location for the storage service</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="vaultPath">Vault Path *</label>
+                    <input 
+                        type="text" 
+                        id="vaultPath" 
+                        name="vaultPath" 
+                        placeholder="colonia/backend-storage/production"
+                        required
+                    />
+                    <small>Path in Vault where credentials are already stored</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="accessKeyField">Access Key Field Name</label>
+                    <input 
+                        type="text" 
+                        id="accessKeyField" 
+                        name="accessKeyField" 
+                        placeholder="access_key"
+                        value="access_key"
+                    />
+                    <small>Field name for access key in Vault (default: access_key)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="secretKeyField">Secret Key Field Name</label>
+                    <input 
+                        type="text" 
+                        id="secretKeyField" 
+                        name="secretKeyField" 
+                        placeholder="secret_key"
+                        value="secret_key"
+                    />
+                    <small>Field name for secret key in Vault (default: secret_key)</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Test Connection
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
+                        Save Configuration
+                    </button>
+                </div>
+            </form>
+
+            <!-- Test Results -->
+            <div id="testResults" style="margin-top: 20px;"></div>
+            
+            <!-- Status Messages -->
+            <div id="statusMessage" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/sidebar.js"></script>
+    <script>
+        // Check if Vault is configured on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkVaultConfiguration();
+            loadBackendStorages();
+        });
+
+        function checkVaultConfiguration() {
+            fetch('/api/vault/config')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.url || !data.token_set) {
+                        document.getElementById('vaultWarning').style.display = 'block';
+                        document.getElementById('addBackendStorageBtn').disabled = true;
+                    } else {
+                        document.getElementById('vaultWarning').style.display = 'none';
+                        document.getElementById('addBackendStorageBtn').disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking vault config:', error);
+                    document.getElementById('vaultWarning').style.display = 'block';
+                    document.getElementById('addBackendStorageBtn').disabled = true;
+                });
+        }
+
+        // Modal controls
+        document.getElementById('addBackendStorageBtn').addEventListener('click', function() {
+            document.getElementById('backendStorageModal').style.display = 'block';
+        });
+
+        // Function to reset modal form
+        function resetModalForm() {
+            document.getElementById('backendStorageForm').reset();
+            document.getElementById('region').value = 'us-east-1';
+            document.getElementById('accessKeyField').value = 'access_key';
+            document.getElementById('secretKeyField').value = 'secret_key';
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('statusMessage').innerHTML = '';
+        }
+
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('backendStorageModal').style.display = 'none';
+            resetModalForm();
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('backendStorageModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                resetModalForm();
+            }
+        });
+
+        // HTML sanitization function to prevent XSS
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') {
+                return unsafe;
+            }
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showMessage(message, isError = false) {
+            const statusDiv = document.getElementById('statusMessage');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+            alertDiv.textContent = message;
+            statusDiv.innerHTML = '';
+            statusDiv.appendChild(alertDiv);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function showTestResults(results) {
+            const resultsDiv = document.getElementById('testResults');
+            
+            let html = '<div class="card" style="margin-top: 20px;"><h4>Test Results</h4><ul style="list-style: none; padding: 0;">';
+            
+            results.forEach(result => {
+                const icon = result.status === 'success' ? '✓' : '✗';
+                const color = result.status === 'success' ? 'green' : 'red';
+                const safeStep = escapeHtml(result.step);
+                const safeMessage = escapeHtml(result.message);
+                html += `<li style="padding: 8px; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: ${color}; font-weight: bold;">${icon}</span>
+                    <strong>${safeStep}:</strong> ${safeMessage}
+                </li>`;
+            });
+            
+            html += '</ul></div>';
+            resultsDiv.innerHTML = html;
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                resultsDiv.innerHTML = '';
+            }, 10000);
+        }
+
+        // Handle test connection button
+        document.getElementById('testConnectionBtn').addEventListener('click', function() {
+            const endpointUrl = document.getElementById('endpointUrl').value.trim();
+            const bucketName = document.getElementById('bucketName').value.trim();
+            const region = document.getElementById('region').value.trim() || 'us-east-1';
+            const vaultPath = document.getElementById('vaultPath').value.trim();
+            const accessKeyField = document.getElementById('accessKeyField').value.trim() || 'access_key';
+            const secretKeyField = document.getElementById('secretKeyField').value.trim() || 'secret_key';
+
+            if (!endpointUrl || !bucketName || !vaultPath) {
+                showMessage('Please fill in all required fields before testing', true);
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.textContent = 'Testing...';
+
+            fetch('/api/backend-storage/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    endpoint_url: endpointUrl,
+                    bucket_name: bucketName,
+                    region: region,
+                    vault_path: vaultPath,
+                    access_key_field: accessKeyField,
+                    secret_key_field: secretKeyField
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('✓ All connection tests passed!', false);
+                    showTestResults(data.results);
+                } else {
+                    showMessage('✗ Connection test failed. Check the test results below.', true);
+                    showTestResults(data.results);
+                }
+            })
+            .catch(error => {
+                showMessage('Error testing connection: ' + error.message, true);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('backendStorageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('storageName').value.trim();
+            const endpointUrl = document.getElementById('endpointUrl').value.trim();
+            const bucketName = document.getElementById('bucketName').value.trim();
+            const region = document.getElementById('region').value.trim() || 'us-east-1';
+            const vaultPath = document.getElementById('vaultPath').value.trim();
+            const accessKeyField = document.getElementById('accessKeyField').value.trim() || 'access_key';
+            const secretKeyField = document.getElementById('secretKeyField').value.trim() || 'secret_key';
+
+            if (!name || !endpointUrl || !bucketName || !vaultPath) {
+                showMessage('Please fill in all required fields', true);
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.textContent = 'Saving...';
+
+            fetch('/api/backend-storage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    endpoint_url: endpointUrl,
+                    bucket_name: bucketName,
+                    region: region,
+                    vault_path: vaultPath,
+                    access_key_field: accessKeyField,
+                    secret_key_field: secretKeyField
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.id) {
+                    showMessage('✓ Backend storage configured successfully!', false);
+                    // Close modal and reset form
+                    setTimeout(() => {
+                        document.getElementById('backendStorageModal').style.display = 'none';
+                        resetModalForm();
+                    }, 1500);
+                    // Reload the list
+                    loadBackendStorages();
+                } else if (data.error) {
+                    showMessage('✗ ' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('Error saving configuration: ' + error.message, true);
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+
+        function loadBackendStorages() {
+            fetch('/api/backend-storage')
+                .then(response => response.json())
+                .then(data => {
+                    const listDiv = document.getElementById('storagesList');
+                    if (data.storages && data.storages.length > 0) {
+                        let html = '<ul style="list-style: none; padding: 0;">';
+                        data.storages.forEach(storage => {
+                            const safeName = escapeHtml(storage.name);
+                            const safeEndpoint = escapeHtml(storage.endpoint_url);
+                            const safeBucket = escapeHtml(storage.bucket_name);
+                            const safeRegion = escapeHtml(storage.region);
+                            const safeVaultPath = escapeHtml(storage.vault_path);
+                            // Escape single quotes for onclick attribute
+                            const safeNameForAttr = safeName.replace(/'/g, "\\'");
+                            
+                            html += `<li style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>${safeName}</strong><br/>
+                                        <small style="color: var(--text-secondary);">
+                                            ${safeEndpoint} - Bucket: ${safeBucket} - Region: ${safeRegion}
+                                        </small><br/>
+                                        <small style="color: var(--text-secondary);">
+                                            Vault Path: ${safeVaultPath}
+                                        </small>
+                                    </div>
+                                    <button class="btn btn-danger" onclick="deleteStorage(${storage.id}, '${safeNameForAttr}')" style="padding: 8px 16px;">Delete</button>
+                                </div>
+                            </li>`;
+                        });
+                        html += '</ul>';
+                        listDiv.innerHTML = html;
+                    } else {
+                        listDiv.innerHTML = '<p style="color: var(--text-secondary);">No backend storages configured yet.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading backend storages:', error);
+                    document.getElementById('storagesList').innerHTML = '<p style="color: var(--text-error);">Error loading backend storages.</p>';
+                });
+        }
+
+        function deleteStorage(storageId, storageName) {
+            if (!confirm(`Are you sure you want to delete "${storageName}"? This will not delete credentials from Vault.`)) {
+                return;
+            }
+
+            fetch(`/api/backend-storage/${storageId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showMessage('✓ ' + data.message, false);
+                    loadBackendStorages();
+                } else if (data.error) {
+                    showMessage('✗ ' + data.error, true);
+                }
+            })
+            .catch(error => {
+                showMessage('Error deleting backend storage: ' + error.message, true);
+            });
+        }
+    </script>
 </body>
 </html>

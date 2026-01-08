@@ -13,6 +13,7 @@ from .context_secret import ContextSecret
 from .context_env_var import ContextEnvVar
 from .context_stack import ContextStack
 from .context_environment import ContextEnvironment
+from .backend_storage import BackendStorage
 
 __all__ = [
     "Project",
@@ -28,4 +29,5 @@ __all__ = [
     "ContextEnvVar",
     "ContextStack",
     "ContextEnvironment",
+    "BackendStorage",
 ]

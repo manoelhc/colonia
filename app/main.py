@@ -46,6 +46,12 @@ from app.api import (
     attach_context_to_environment_handler,
     detach_context_from_environment_handler,
     list_environment_contexts_handler,
+    list_backend_storages_handler,
+    create_backend_storage_handler,
+    test_backend_storage_handler,
+    delete_backend_storage_handler,
+    set_environment_backend_storage_handler,
+    get_environment_backend_storage_handler,
 )
 
 app = Rupy()
@@ -396,6 +402,37 @@ def api_environment_contexts(request: Request, environment_id: str) -> Response:
 def api_environment_context(request: Request, environment_id: str, context_id: str) -> Response:
     """Handle single environment context API endpoint."""
     return detach_context_from_environment_handler(request, app, environment_id, context_id)
+
+
+# Backend Storage API Routes
+@app.route("/api/backend-storage", methods=["GET", "POST"])
+def api_backend_storage(request: Request) -> Response:
+    """Handle backend storage API endpoint."""
+    if request.method == "POST":
+        return create_backend_storage_handler(request, app)
+    else:  # GET
+        return list_backend_storages_handler(request, app)
+
+
+@app.route("/api/backend-storage/test", methods=["POST"])
+def api_test_backend_storage(request: Request) -> Response:
+    """Test backend storage connection."""
+    return test_backend_storage_handler(request, app)
+
+
+@app.route("/api/backend-storage/<storage_id>", methods=["DELETE"])
+def api_delete_backend_storage(request: Request, storage_id: str) -> Response:
+    """Delete a backend storage configuration."""
+    return delete_backend_storage_handler(request, app, storage_id)
+
+
+@app.route("/api/environments/<environment_id>/backend-storage", methods=["GET", "PUT"])
+def api_environment_backend_storage(request: Request, environment_id: str) -> Response:
+    """Handle environment backend storage endpoint."""
+    if request.method == "PUT":
+        return set_environment_backend_storage_handler(request, app, environment_id)
+    else:  # GET
+        return get_environment_backend_storage_handler(request, app, environment_id)
 
 
 def main():
