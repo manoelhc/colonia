@@ -201,142 +201,15 @@
                         </div>
                     </div>
 
-                    <!-- Add Backend Storage Form -->
+                    <!-- Add Backend Storage Button -->
                     <div class="activity-section">
-                        <div class="activity-header">
-                            <h4>Add Backend Storage</h4>
-                        </div>
                         <div class="activity-content">
-                            <form id="backendStorageForm">
-                                <div class="form-group">
-                                    <label for="storageName">Storage Name *</label>
-                                    <input 
-                                        type="text" 
-                                        id="storageName" 
-                                        name="storageName" 
-                                        placeholder="Production S3 Storage"
-                                        required
-                                    />
-                                    <small>A descriptive name for this backend storage configuration</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="endpointUrl">Endpoint URL *</label>
-                                    <input 
-                                        type="text" 
-                                        id="endpointUrl" 
-                                        name="endpointUrl" 
-                                        placeholder="https://s3.amazonaws.com or https://nyc3.digitaloceanspaces.com"
-                                        required
-                                    />
-                                    <small>The endpoint URL for your S3-compatible service</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="bucketName">Bucket Name *</label>
-                                    <input 
-                                        type="text" 
-                                        id="bucketName" 
-                                        name="bucketName" 
-                                        placeholder="terraform-state-bucket"
-                                        required
-                                    />
-                                    <small>The name of the bucket where state files will be stored</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="region">Region</label>
-                                    <input 
-                                        type="text" 
-                                        id="region" 
-                                        name="region" 
-                                        placeholder="us-east-1"
-                                        value="us-east-1"
-                                    />
-                                    <small>AWS region or location for the storage service</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="vaultPath">Vault Path *</label>
-                                    <input 
-                                        type="text" 
-                                        id="vaultPath" 
-                                        name="vaultPath" 
-                                        placeholder="colonia/backend-storage/production"
-                                        required
-                                    />
-                                    <small>Path in Vault where credentials will be stored</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="accessKey">Access Key *</label>
-                                    <input 
-                                        type="text" 
-                                        id="accessKey" 
-                                        name="accessKey" 
-                                        placeholder="Your access key ID"
-                                        required
-                                    />
-                                    <small>AWS access key ID or equivalent</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="secretKey">Secret Key *</label>
-                                    <input 
-                                        type="password" 
-                                        id="secretKey" 
-                                        name="secretKey" 
-                                        placeholder="Your secret access key"
-                                        required
-                                    />
-                                    <small>AWS secret access key or equivalent</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="accessKeyField">Access Key Field Name</label>
-                                    <input 
-                                        type="text" 
-                                        id="accessKeyField" 
-                                        name="accessKeyField" 
-                                        placeholder="access_key"
-                                        value="access_key"
-                                    />
-                                    <small>Field name for access key in Vault (default: access_key)</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="secretKeyField">Secret Key Field Name</label>
-                                    <input 
-                                        type="text" 
-                                        id="secretKeyField" 
-                                        name="secretKeyField" 
-                                        placeholder="secret_key"
-                                        value="secret_key"
-                                    />
-                                    <small>Field name for secret key in Vault (default: secret_key)</small>
-                                </div>
-
-                                <div class="form-actions">
-                                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        Test Connection
-                                    </button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                                        </svg>
-                                        Save Configuration
-                                    </button>
-                                </div>
-                            </form>
-
-                            <!-- Test Results -->
-                            <div id="testResults" style="margin-top: 20px;"></div>
-                            
-                            <!-- Status Messages -->
-                            <div id="statusMessage" style="margin-top: 20px;"></div>
+                            <button id="addBackendStorageBtn" class="btn btn-primary" style="margin-bottom: 20px;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Add a new backend storage
+                            </button>
                         </div>
                     </div>
 
@@ -369,6 +242,123 @@
         </div>
     </div>
 
+    <!-- Backend Storage Modal -->
+    <div id="backendStorageModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+        <div style="background-color: var(--card-bg); margin: 5% auto; padding: 20px; border: 1px solid var(--border-color); border-radius: 8px; width: 80%; max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Add Backend Storage</h3>
+                <button id="closeModalBtn" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-primary);">&times;</button>
+            </div>
+            
+            <form id="backendStorageForm">
+                <div class="form-group">
+                    <label for="storageName">Storage Name *</label>
+                    <input 
+                        type="text" 
+                        id="storageName" 
+                        name="storageName" 
+                        placeholder="Production S3 Storage"
+                        required
+                    />
+                    <small>A descriptive name for this backend storage configuration</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="endpointUrl">Endpoint URL *</label>
+                    <input 
+                        type="text" 
+                        id="endpointUrl" 
+                        name="endpointUrl" 
+                        placeholder="https://s3.amazonaws.com or https://nyc3.digitaloceanspaces.com"
+                        required
+                    />
+                    <small>The endpoint URL for your S3-compatible service</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="bucketName">Bucket Name *</label>
+                    <input 
+                        type="text" 
+                        id="bucketName" 
+                        name="bucketName" 
+                        placeholder="terraform-state-bucket"
+                        required
+                    />
+                    <small>The name of the bucket where state files will be stored</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <input 
+                        type="text" 
+                        id="region" 
+                        name="region" 
+                        placeholder="us-east-1"
+                        value="us-east-1"
+                    />
+                    <small>AWS region or location for the storage service</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="vaultPath">Vault Path *</label>
+                    <input 
+                        type="text" 
+                        id="vaultPath" 
+                        name="vaultPath" 
+                        placeholder="colonia/backend-storage/production"
+                        required
+                    />
+                    <small>Path in Vault where credentials are already stored</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="accessKeyField">Access Key Field Name</label>
+                    <input 
+                        type="text" 
+                        id="accessKeyField" 
+                        name="accessKeyField" 
+                        placeholder="access_key"
+                        value="access_key"
+                    />
+                    <small>Field name for access key in Vault (default: access_key)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="secretKeyField">Secret Key Field Name</label>
+                    <input 
+                        type="text" 
+                        id="secretKeyField" 
+                        name="secretKeyField" 
+                        placeholder="secret_key"
+                        value="secret_key"
+                    />
+                    <small>Field name for secret key in Vault (default: secret_key)</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Test Connection
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
+                        Save Configuration
+                    </button>
+                </div>
+            </form>
+
+            <!-- Test Results -->
+            <div id="testResults" style="margin-top: 20px;"></div>
+            
+            <!-- Status Messages -->
+            <div id="statusMessage" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
@@ -386,18 +376,47 @@
                 .then(data => {
                     if (!data.url || !data.token_set) {
                         document.getElementById('vaultWarning').style.display = 'block';
-                        document.getElementById('backendStorageForm').style.display = 'none';
+                        document.getElementById('addBackendStorageBtn').disabled = true;
                     } else {
                         document.getElementById('vaultWarning').style.display = 'none';
-                        document.getElementById('backendStorageForm').style.display = 'block';
+                        document.getElementById('addBackendStorageBtn').disabled = false;
                     }
                 })
                 .catch(error => {
                     console.error('Error checking vault config:', error);
                     document.getElementById('vaultWarning').style.display = 'block';
-                    document.getElementById('backendStorageForm').style.display = 'none';
+                    document.getElementById('addBackendStorageBtn').disabled = true;
                 });
         }
+
+        // Modal controls
+        document.getElementById('addBackendStorageBtn').addEventListener('click', function() {
+            document.getElementById('backendStorageModal').style.display = 'block';
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('backendStorageModal').style.display = 'none';
+            document.getElementById('backendStorageForm').reset();
+            document.getElementById('region').value = 'us-east-1';
+            document.getElementById('accessKeyField').value = 'access_key';
+            document.getElementById('secretKeyField').value = 'secret_key';
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('statusMessage').innerHTML = '';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('backendStorageModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                document.getElementById('backendStorageForm').reset();
+                document.getElementById('region').value = 'us-east-1';
+                document.getElementById('accessKeyField').value = 'access_key';
+                document.getElementById('secretKeyField').value = 'secret_key';
+                document.getElementById('testResults').innerHTML = '';
+                document.getElementById('statusMessage').innerHTML = '';
+            }
+        });
 
         // HTML sanitization function to prevent XSS
         function escapeHtml(unsafe) {
@@ -512,12 +531,10 @@
             const bucketName = document.getElementById('bucketName').value.trim();
             const region = document.getElementById('region').value.trim() || 'us-east-1';
             const vaultPath = document.getElementById('vaultPath').value.trim();
-            const accessKey = document.getElementById('accessKey').value.trim();
-            const secretKey = document.getElementById('secretKey').value.trim();
             const accessKeyField = document.getElementById('accessKeyField').value.trim() || 'access_key';
             const secretKeyField = document.getElementById('secretKeyField').value.trim() || 'secret_key';
 
-            if (!name || !endpointUrl || !bucketName || !vaultPath || !accessKey || !secretKey) {
+            if (!name || !endpointUrl || !bucketName || !vaultPath) {
                 showMessage('Please fill in all required fields', true);
                 return;
             }
@@ -538,8 +555,6 @@
                     bucket_name: bucketName,
                     region: region,
                     vault_path: vaultPath,
-                    access_key: accessKey,
-                    secret_key: secretKey,
                     access_key_field: accessKeyField,
                     secret_key_field: secretKeyField
                 })
@@ -548,11 +563,16 @@
             .then(data => {
                 if (data.id) {
                     showMessage('✓ Backend storage configured successfully!', false);
-                    // Reset form
-                    document.getElementById('backendStorageForm').reset();
-                    document.getElementById('region').value = 'us-east-1';
-                    document.getElementById('accessKeyField').value = 'access_key';
-                    document.getElementById('secretKeyField').value = 'secret_key';
+                    // Close modal and reset form
+                    setTimeout(() => {
+                        document.getElementById('backendStorageModal').style.display = 'none';
+                        document.getElementById('backendStorageForm').reset();
+                        document.getElementById('region').value = 'us-east-1';
+                        document.getElementById('accessKeyField').value = 'access_key';
+                        document.getElementById('secretKeyField').value = 'secret_key';
+                        document.getElementById('testResults').innerHTML = '';
+                        document.getElementById('statusMessage').innerHTML = '';
+                    }, 1500);
                     // Reload the list
                     loadBackendStorages();
                 } else if (data.error) {

@@ -3336,8 +3336,8 @@ def create_backend_storage_handler(request: Request, app) -> Response:
 
         data = json.loads(body)
 
-        # Validate required fields
-        required_fields = ["name", "endpoint_url", "bucket_name", "vault_path", "access_key", "secret_key"]
+        # Validate required fields - credentials should already be in Vault
+        required_fields = ["name", "endpoint_url", "bucket_name", "vault_path"]
         for field in required_fields:
             if field not in data or not data[field]:
                 response = Response(
@@ -3361,18 +3361,16 @@ def create_backend_storage_handler(request: Request, app) -> Response:
         vault_path = sanitize_string(data["vault_path"], max_length=500)
         access_key_field = sanitize_string(data.get("access_key_field", "access_key"), max_length=255)
         secret_key_field = sanitize_string(data.get("secret_key_field", "secret_key"), max_length=255)
-        access_key = sanitize_string(data["access_key"], max_length=500)
-        secret_key = sanitize_string(data["secret_key"], max_length=500)
 
-        # Store credentials in Vault
-        from app.backend_storage import store_credentials_in_vault
-        success, message = store_credentials_in_vault(
-            vault_path, access_key, secret_key, access_key_field, secret_key_field
+        # Verify credentials exist in Vault before creating storage config
+        from app.backend_storage import get_credentials_from_vault
+        access_key, secret_key, error = get_credentials_from_vault(
+            vault_path, access_key_field, secret_key_field
         )
-        if not success:
+        if error:
             response = Response(
-                json.dumps({"error": f"Failed to store credentials in Vault: {message}"}),
-                status=500
+                json.dumps({"error": f"Credentials not found in Vault at path '{vault_path}': {error}. Please ensure credentials are stored in Vault before configuring backend storage."}),
+                status=400
             )
             response.set_header("Content-Type", "application/json")
             return response
