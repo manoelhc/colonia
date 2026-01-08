@@ -86,6 +86,7 @@
                 
                 project.environments.forEach(environment => {
                     const hasContexts = environment.contexts && environment.contexts.length > 0;
+                    const backendStorage = environment.backend_storage; // Assume this will be loaded from API
                     html += `
                         <div class="environment-card" data-environment-id="${environment.id}" data-project-id="${project.id}">
                             <div class="environment-header">
@@ -97,7 +98,46 @@
                                 <div class="environment-info">
                                     <div class="environment-name">${escapeHtml(environment.name)}</div>
                                     <div class="environment-directory">${escapeHtml(environment.directory)}</div>
+                                    <div class="environment-backend-storage" style="margin-top: 8px; padding: 8px; background: var(--card-bg); border-radius: 4px; border: 1px solid var(--border-color);">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <strong style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary);">Backend Storage</strong>
+                                            <button class="btn-change-storage" onclick="window.openBackendStorageModal(${environment.id})" title="Change backend storage" style="padding: 4px 8px; font-size: 12px;">
+                                                Change
+                                            </button>
+                                        </div>
+                                        <div id="storage-display-${environment.id}" style="font-size: 13px;">
+                                            <span style="color: var(--text-secondary);">Loading...</span>
+                                        </div>
+                                    </div>
                                     <div class="environment-contexts">
+                                        ${hasContexts ? environment.contexts.map(ctx => `
+                                            <span class="context-badge">
+                                                ${escapeHtml(ctx.name)}
+                                                <button class="context-remove-btn" onclick="window.removeEnvironmentContext(${environment.id}, ${ctx.id})" title="Remove context">
+                                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </button>
+                                            </span>
+                                        `).join('') : ''}
+                                        <button class="btn-add-context" onclick="window.openEnvironmentContextModal(${environment.id}, ${project.id})" title="Add context to environment">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                            Add Context
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="environment-footer">
+                                <small class="text-muted">Created: ${formatDate(environment.created_at)}</small>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Load backend storage for this environment asynchronously
+                    loadEnvironmentBackendStorage(environment.id);
+                });
                                         ${hasContexts ? environment.contexts.map(ctx => `
                                             <span class="context-badge">
                                                 ${escapeHtml(ctx.name)}
@@ -243,6 +283,152 @@
     // Expose functions to window for onclick handlers
     window.openEnvironmentContextModal = openEnvironmentContextModal;
     window.removeEnvironmentContext = removeEnvironmentContext;
+
+    // Load backend storage for an environment
+    async function loadEnvironmentBackendStorage(environmentId) {
+        try {
+            const response = await fetch(`/api/environments/${environmentId}/backend-storage`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load backend storage');
+            }
+
+            const data = await response.json();
+            const displayElement = document.getElementById(`storage-display-${environmentId}`);
+            
+            if (data.backend_storage) {
+                const storage = data.backend_storage;
+                displayElement.innerHTML = `
+                    <div style="color: var(--text-primary);">
+                        <strong>${escapeHtml(storage.name)}</strong><br/>
+                        <small style="color: var(--text-secondary);">${escapeHtml(storage.endpoint_url)} / ${escapeHtml(storage.bucket_name)}</small>
+                    </div>
+                `;
+            } else {
+                displayElement.innerHTML = '<span style="color: var(--text-secondary); font-style: italic;">No backend storage configured</span>';
+            }
+        } catch (error) {
+            console.error('Error loading backend storage:', error);
+            const displayElement = document.getElementById(`storage-display-${environmentId}`);
+            if (displayElement) {
+                displayElement.innerHTML = '<span style="color: var(--text-error);">Error loading storage</span>';
+            }
+        }
+    }
+
+    // Open modal to change backend storage
+    async function openBackendStorageModal(environmentId) {
+        window.selectedEnvironmentId = environmentId;
+        
+        // Load available backend storages
+        try {
+            const response = await fetch('/api/backend-storage', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load backend storages');
+            }
+
+            const data = await response.json();
+            const storages = data.storages || [];
+            
+            if (storages.length === 0) {
+                alert('No backend storages configured. Please configure backend storage in Settings → Backend Storage first.');
+                return;
+            }
+
+            // Get current backend storage
+            const currentResponse = await fetch(`/api/environments/${environmentId}/backend-storage`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const currentData = await currentResponse.json();
+            const currentStorageId = currentData.backend_storage ? currentData.backend_storage.id : null;
+
+            // Build options HTML
+            let optionsHtml = '<option value="">-- None --</option>';
+            storages.forEach(storage => {
+                const selected = storage.id === currentStorageId ? 'selected' : '';
+                optionsHtml += `<option value="${storage.id}" ${selected}>${escapeHtml(storage.name)} (${escapeHtml(storage.bucket_name)})</option>`;
+            });
+
+            // Show modal using a simple prompt for now (could be enhanced with a proper modal)
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            modal.innerHTML = `
+                <div style="background: var(--card-bg); padding: 24px; border-radius: 8px; max-width: 500px; width: 90%;">
+                    <h3 style="margin-top: 0;">Select Backend Storage</h3>
+                    <form id="backendStorageSelectForm">
+                        <div class="form-group">
+                            <label for="storageSelect">Backend Storage</label>
+                            <select id="storageSelect" class="form-control" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" id="cancelStorageBtn" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+
+            // Handle form submission
+            document.getElementById('backendStorageSelectForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const storageId = document.getElementById('storageSelect').value;
+                
+                try {
+                    const response = await fetch(`/api/environments/${environmentId}/backend-storage`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            backend_storage_id: storageId ? parseInt(storageId) : null
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to update backend storage');
+                    }
+
+                    // Reload backend storage display
+                    await loadEnvironmentBackendStorage(environmentId);
+                    document.body.removeChild(modal);
+                } catch (error) {
+                    console.error('Error updating backend storage:', error);
+                    alert('Failed to update backend storage: ' + error.message);
+                }
+            });
+
+            // Handle cancel
+            document.getElementById('cancelStorageBtn').addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+
+            // Close on backdrop click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+
+        } catch (error) {
+            console.error('Error opening backend storage modal:', error);
+            alert('Failed to load backend storages: ' + error.message);
+        }
+    }
+
+    // Expose backend storage functions to window
+    window.openBackendStorageModal = openBackendStorageModal;
+    window.loadEnvironmentBackendStorage = loadEnvironmentBackendStorage;
 
     // Format date for display
     function formatDate(dateString) {
