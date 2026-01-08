@@ -1,6 +1,6 @@
 """Backend Storage model for Colonia."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import Field, SQLModel
 
@@ -20,8 +20,8 @@ class BackendStorage(SQLModel, table=True):
     # Access key and secret key names in Vault
     access_key_field: str = Field(default="access_key", max_length=255, nullable=False)
     secret_key_field: str = Field(default="secret_key", max_length=255, nullable=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
 
     class Config:
         """Pydantic configuration."""

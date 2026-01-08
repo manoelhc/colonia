@@ -399,13 +399,26 @@
                 });
         }
 
+        // HTML sanitization function to prevent XSS
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') {
+                return unsafe;
+            }
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         function showMessage(message, isError = false) {
             const statusDiv = document.getElementById('statusMessage');
-            statusDiv.innerHTML = `
-                <div class="alert ${isError ? 'alert-error' : 'alert-success'}">
-                    ${message}
-                </div>
-            `;
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+            alertDiv.textContent = message;
+            statusDiv.innerHTML = '';
+            statusDiv.appendChild(alertDiv);
             
             // Auto-hide after 5 seconds
             setTimeout(() => {
@@ -421,9 +434,11 @@
             results.forEach(result => {
                 const icon = result.status === 'success' ? '✓' : '✗';
                 const color = result.status === 'success' ? 'green' : 'red';
+                const safeStep = escapeHtml(result.step);
+                const safeMessage = escapeHtml(result.message);
                 html += `<li style="padding: 8px; border-bottom: 1px solid var(--border-color);">
                     <span style="color: ${color}; font-weight: bold;">${icon}</span>
-                    <strong>${result.step}:</strong> ${result.message}
+                    <strong>${safeStep}:</strong> ${safeMessage}
                 </li>`;
             });
             
@@ -561,18 +576,26 @@
                     if (data.storages && data.storages.length > 0) {
                         let html = '<ul style="list-style: none; padding: 0;">';
                         data.storages.forEach(storage => {
+                            const safeName = escapeHtml(storage.name);
+                            const safeEndpoint = escapeHtml(storage.endpoint_url);
+                            const safeBucket = escapeHtml(storage.bucket_name);
+                            const safeRegion = escapeHtml(storage.region);
+                            const safeVaultPath = escapeHtml(storage.vault_path);
+                            // Escape single quotes for onclick attribute
+                            const safeNameForAttr = safeName.replace(/'/g, "\\'");
+                            
                             html += `<li style="padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 12px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div>
-                                        <strong>${storage.name}</strong><br/>
+                                        <strong>${safeName}</strong><br/>
                                         <small style="color: var(--text-secondary);">
-                                            ${storage.endpoint_url} - Bucket: ${storage.bucket_name} - Region: ${storage.region}
+                                            ${safeEndpoint} - Bucket: ${safeBucket} - Region: ${safeRegion}
                                         </small><br/>
                                         <small style="color: var(--text-secondary);">
-                                            Vault Path: ${storage.vault_path}
+                                            Vault Path: ${safeVaultPath}
                                         </small>
                                     </div>
-                                    <button class="btn btn-danger" onclick="deleteStorage(${storage.id}, '${storage.name}')" style="padding: 8px 16px;">Delete</button>
+                                    <button class="btn btn-danger" onclick="deleteStorage(${storage.id}, '${safeNameForAttr}')" style="padding: 8px 16px;">Delete</button>
                                 </div>
                             </li>`;
                         });
