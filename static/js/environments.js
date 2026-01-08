@@ -336,7 +336,7 @@
             const modal = document.createElement('div');
             modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
             modal.innerHTML = `
-                <div style="background: var(--card-bg); padding: 24px; border-radius: 8px; max-width: 500px; width: 90%;">
+                <div style="background: #ffffff; padding: 24px; border-radius: 8px; max-width: 500px; width: 90%; color: #000000;">
                     <h3 style="margin-top: 0;">Select Backend Storage</h3>
                     <form id="backendStorageSelectForm">
                         <div class="form-group">

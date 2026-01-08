@@ -244,7 +244,7 @@
 
     <!-- Backend Storage Modal -->
     <div id="backendStorageModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
-        <div style="background-color: var(--card-bg); margin: 5% auto; padding: 20px; border: 1px solid var(--border-color); border-radius: 8px; width: 80%; max-width: 600px;">
+        <div style="background-color: #ffffff; margin: 5% auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; width: 80%; max-width: 600px; color: #000000;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3>Add Backend Storage</h3>
                 <button id="closeModalBtn" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-primary);">&times;</button>
