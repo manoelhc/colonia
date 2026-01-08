@@ -108,7 +108,7 @@ services:
       - colonia-network
   # Add OpenBao service (Vault-compatible open source secrets management)
   vault:
-    image: quay.io/openbao/openbao:2.1.0
+    image: quay.io/openbao/openbao:2.4.4
     container_name: colonia-openbao
     ports:
       - "8200:8200"
