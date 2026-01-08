@@ -394,14 +394,19 @@
             document.getElementById('backendStorageModal').style.display = 'block';
         });
 
-        document.getElementById('closeModalBtn').addEventListener('click', function() {
-            document.getElementById('backendStorageModal').style.display = 'none';
+        // Function to reset modal form
+        function resetModalForm() {
             document.getElementById('backendStorageForm').reset();
             document.getElementById('region').value = 'us-east-1';
             document.getElementById('accessKeyField').value = 'access_key';
             document.getElementById('secretKeyField').value = 'secret_key';
             document.getElementById('testResults').innerHTML = '';
             document.getElementById('statusMessage').innerHTML = '';
+        }
+
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('backendStorageModal').style.display = 'none';
+            resetModalForm();
         });
 
         // Close modal when clicking outside
@@ -409,12 +414,7 @@
             const modal = document.getElementById('backendStorageModal');
             if (event.target === modal) {
                 modal.style.display = 'none';
-                document.getElementById('backendStorageForm').reset();
-                document.getElementById('region').value = 'us-east-1';
-                document.getElementById('accessKeyField').value = 'access_key';
-                document.getElementById('secretKeyField').value = 'secret_key';
-                document.getElementById('testResults').innerHTML = '';
-                document.getElementById('statusMessage').innerHTML = '';
+                resetModalForm();
             }
         });
 
@@ -566,12 +566,7 @@
                     // Close modal and reset form
                     setTimeout(() => {
                         document.getElementById('backendStorageModal').style.display = 'none';
-                        document.getElementById('backendStorageForm').reset();
-                        document.getElementById('region').value = 'us-east-1';
-                        document.getElementById('accessKeyField').value = 'access_key';
-                        document.getElementById('secretKeyField').value = 'secret_key';
-                        document.getElementById('testResults').innerHTML = '';
-                        document.getElementById('statusMessage').innerHTML = '';
+                        resetModalForm();
                     }, 1500);
                     // Reload the list
                     loadBackendStorages();
