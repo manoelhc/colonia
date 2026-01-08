@@ -227,10 +227,76 @@
         </div>
     </div>
 
+    <!-- Context Attach Modal -->
+    <div id="contextAttachModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="contextModalTitle">Add Context</h3>
+                <button class="modal-close" type="button">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="contextAttachForm" class="modal-body">
+                <div class="form-group">
+                    <label for="contextSelect">Select Context <span class="required">*</span></label>
+                    <select id="contextSelect" name="context_id" required>
+                        <option value="">Select a context...</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary modal-close">Cancel</button>
+                    <button type="submit" class="btn-primary">Attach Context</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/i18n.js"></script>
     <script src="/static/js/sidebar.js"></script>
     <script src="/static/js/environments.js"></script>
+    <script>
+        // Attach form handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('contextAttachForm');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const contextId = document.getElementById('contextSelect').value;
+                    if (!contextId) {
+                        alert('Please select a context');
+                        return;
+                    }
+
+                    try {
+                        const envId = window.selectedEnvironmentId;
+                        const url = `/api/environments/${envId}/contexts`;
+
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ context_id: parseInt(contextId) })
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || 'Failed to attach context');
+                        }
+
+                        // Reload page to show updated contexts
+                        // Note: Could be improved with dynamic update instead of full reload
+                        window.location.reload();
+                    } catch (error) {
+                        console.error('Error attaching context:', error);
+                        alert('Failed to attach context: ' + error.message);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
