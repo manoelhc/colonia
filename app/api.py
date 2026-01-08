@@ -3562,3 +3562,131 @@ def delete_backend_storage_handler(request: Request, app, storage_id: str) -> Re
         )
         response.set_header("Content-Type", "application/json")
         return response
+
+
+def set_environment_backend_storage_handler(request: Request, app, environment_id: str) -> Response:
+    """Set backend storage for an environment."""
+    try:
+        try:
+            eid = int(environment_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid environment ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        body = request.body
+        if not body:
+            response = Response(
+                json.dumps({"error": "Request body is required"}), status=400
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        data = json.loads(body)
+        backend_storage_id = data.get("backend_storage_id")
+
+        # Allow null to unset backend storage
+        if backend_storage_id is not None:
+            try:
+                backend_storage_id = int(backend_storage_id)
+            except ValueError:
+                response = Response(
+                    json.dumps({"error": "Invalid backend storage ID"}), status=400
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+        with get_session() as session:
+            from models import Environment, BackendStorage
+
+            environment = session.get(Environment, eid)
+            if not environment:
+                response = Response(
+                    json.dumps({"error": "Environment not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            # Verify backend storage exists if provided
+            if backend_storage_id is not None:
+                storage = session.get(BackendStorage, backend_storage_id)
+                if not storage:
+                    response = Response(
+                        json.dumps({"error": "Backend storage not found"}), status=404
+                    )
+                    response.set_header("Content-Type", "application/json")
+                    return response
+
+            # Update environment
+            environment.backend_storage_id = backend_storage_id
+            environment.updated_at = datetime.utcnow()
+            session.add(environment)
+
+            message = "Backend storage unset from environment" if backend_storage_id is None else "Backend storage set for environment"
+            response = Response(
+                json.dumps({"message": message}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except json.JSONDecodeError:
+        response = Response(
+            json.dumps({"error": "Invalid JSON in request body"}), status=400
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+    except Exception as e:
+        logger.error(f"Error setting environment backend storage: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response
+
+
+def get_environment_backend_storage_handler(request: Request, app, environment_id: str) -> Response:
+    """Get backend storage configuration for an environment."""
+    try:
+        try:
+            eid = int(environment_id)
+        except ValueError:
+            response = Response(json.dumps({"error": "Invalid environment ID"}), status=400)
+            response.set_header("Content-Type", "application/json")
+            return response
+
+        with get_session() as session:
+            from models import Environment, BackendStorage
+
+            environment = session.get(Environment, eid)
+            if not environment:
+                response = Response(
+                    json.dumps({"error": "Environment not found"}), status=404
+                )
+                response.set_header("Content-Type", "application/json")
+                return response
+
+            backend_storage = None
+            if environment.backend_storage_id:
+                storage = session.get(BackendStorage, environment.backend_storage_id)
+                if storage:
+                    backend_storage = {
+                        "id": storage.id,
+                        "name": storage.name,
+                        "endpoint_url": storage.endpoint_url,
+                        "bucket_name": storage.bucket_name,
+                        "region": storage.region,
+                    }
+
+            response = Response(
+                json.dumps({"backend_storage": backend_storage}), status=200
+            )
+            response.set_header("Content-Type", "application/json")
+            return response
+
+    except Exception as e:
+        logger.error(f"Error getting environment backend storage: {e}", exc_info=True)
+        response = Response(
+            json.dumps({"error": f"Internal server error: {str(e)}"}), status=500
+        )
+        response.set_header("Content-Type", "application/json")
+        return response

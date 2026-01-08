@@ -50,6 +50,8 @@ from app.api import (
     create_backend_storage_handler,
     test_backend_storage_handler,
     delete_backend_storage_handler,
+    set_environment_backend_storage_handler,
+    get_environment_backend_storage_handler,
 )
 
 app = Rupy()
@@ -422,6 +424,15 @@ def api_test_backend_storage(request: Request) -> Response:
 def api_delete_backend_storage(request: Request, storage_id: str) -> Response:
     """Delete a backend storage configuration."""
     return delete_backend_storage_handler(request, app, storage_id)
+
+
+@app.route("/api/environments/<environment_id>/backend-storage", methods=["GET", "PUT"])
+def api_environment_backend_storage(request: Request, environment_id: str) -> Response:
+    """Handle environment backend storage endpoint."""
+    if request.method == "PUT":
+        return set_environment_backend_storage_handler(request, app, environment_id)
+    else:  # GET
+        return get_environment_backend_storage_handler(request, app, environment_id)
 
 
 def main():
